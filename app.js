@@ -8,7 +8,7 @@ const titles={function:'Función',material:'Material',design_basis:'Base de dise
 const groupLabels={FRAME:'Bastidor',DRAW:'Lanza y enganche',SUSP:'Suspensión',RUN:'Ejes, frenos y ruedas',BODY:'Guardabarros y apoyos',ELEC:'Electricidad y señalización'};
 let data,renderer,scene,camera,controls,ground,selectionBox;
 const meshes=new Map(),enabled=new Set(Object.keys(groupLabels)),hidden=new Set();
-let selected=null,isolateId=null,xray=false,ready=false;
+let selected=null,isolateId=null,xray=false,ready=false,topicIds=null;
 const initialInspector=$('#inspector').innerHTML;
 const loading=$('#loading'),progress=$('#load-progress');
 const viewport=$('#viewport');
@@ -22,7 +22,7 @@ function resetMaterial(mesh){
 function applyVisibility(){
  let count=0;
  for(const [id,mesh] of meshes){
-   mesh.visible=enabled.has(mesh.userData.group)&&!hidden.has(id)&&(!isolateId||id===isolateId);
+   mesh.visible=enabled.has(mesh.userData.group)&&!hidden.has(id)&&(!isolateId||id===isolateId)&&(!topicIds||topicIds.has(id));
    resetMaterial(mesh);
    if(mesh.visible)count++;
    if(xray&&selected&&id!==selected){mesh.material.transparent=true;mesh.material.opacity=.12;mesh.material.depthWrite=false;}
@@ -30,7 +30,7 @@ function applyVisibility(){
  const mesh=meshes.get(selected);
  if(mesh){mesh.material.emissive.setHex(0xc77e30);mesh.material.emissiveIntensity=.44;}
  if(selectionBox){selectionBox.visible=!!mesh?.visible;if(mesh?.visible)selectionBox.setFromObject(mesh);}
- $('#visible-count').textContent=count+' / '+(data?.objects.length||302)+' piezas visibles';
+ $('#visible-count').textContent=count+' / '+(data?.objects.length||336)+' elementos visibles';
  render();renderGroups();
 }
 function renderGroups(){
@@ -39,7 +39,7 @@ function renderGroups(){
 }
 function renderList(){
  const term=normalize($('#search').value);
- const parts=data.objects.filter(p=>enabled.has(p.group)&&(!term||p.search.includes(term)));
+ const parts=data.objects.filter(p=>enabled.has(p.group)&&(!topicIds||topicIds.has(p.id))&&(!term||p.search.includes(term)));
  $('#list-count').textContent=parts.length+' fichas disponibles';
  $('#part-list').innerHTML=parts.length?parts.map(p=>'<button class="part-row '+(p.id===selected?'active':'')+'" data-id="'+escapeHTML(p.id)+'" aria-pressed="'+(p.id===selected)+'"><code>'+escapeHTML(p.id)+'</code>'+escapeHTML(p.name)+'</button>').join(''):'<div class="no-results">No hay coincidencias. Probá otro nombre o activá más conjuntos.</div>';
  $('#part-list').querySelectorAll('button').forEach(button=>button.onclick=()=>selectPart(button.dataset.id,true));
@@ -48,7 +48,8 @@ function selectPart(id,focus=false){
  const part=data.objects.find(p=>p.id===id);if(!part)return;
  selected=id;hidden.delete(id);enabled.add(part.group);if(isolateId)isolateId=id;if(focus&&ready)xray=true;
  const notes=part.notes.map(n=>'<details '+(['function','material'].includes(n.title)?'open':'')+'><summary>'+escapeHTML(titles[n.title]||n.title)+'</summary><p>'+escapeHTML(n.body)+'</p></details>').join('');
- $('#inspector').innerHTML='<div class="inspector-head"><code>'+escapeHTML(id)+'</code><h2>'+escapeHTML(part.name)+'</h2><span class="inspector-label">Ficha de desarrollo · '+escapeHTML(groupLabels[part.group])+'</span><div class="selection-actions"><button id="focus-part">Acercar</button><button id="isolate-part">'+(isolateId?'Ver conjunto':'Aislar')+'</button><button id="hide-part">Ocultar</button><button id="xray-part">'+(xray?'Opaco':'Ver interior')+'</button></div></div><div class="info-notes">'+notes+'<p class="small-note">Las referencias de catálogo no acreditan homologación de esta pieza ni del vehículo completo. Consultá la sección Normativa.</p></div>';
+ const decisions=(part.decisions||[]).map(key=>data.decisions.find(d=>d.id===key)).filter(Boolean).map(d=>'<details class="decision-note" open><summary>'+escapeHTML(d.title)+'</summary><p>'+escapeHTML(d.body)+'</p><strong>Para validar</strong><p>'+escapeHTML(d.validation)+'</p>'+sourceLinks(d)+'</details>').join('');
+ $('#inspector').innerHTML='<div class="inspector-head"><code>'+escapeHTML(id)+'</code><h2>'+escapeHTML(part.name)+'</h2><span class="inspector-label">Ficha de desarrollo · '+escapeHTML(groupLabels[part.group])+'</span><div class="selection-actions"><button id="focus-part">Acercar</button><button id="isolate-part">'+(isolateId?'Ver conjunto':'Aislar')+'</button><button id="hide-part">Ocultar</button><button id="xray-part">'+(xray?'Opaco':'Ver interior')+'</button></div></div><div class="info-notes">'+decisions+notes+'<p class="small-note">Las referencias de catálogo no acreditan homologación de esta pieza ni del vehículo completo. Consultá la sección Normativa.</p></div>';
  $('#inspector').scrollTop=0;
  $('#focus-part').onclick=()=>focusPart(id);
  $('#isolate-part').onclick=()=>{isolateId=isolateId?null:id;applyVisibility();$('#isolate-part').textContent=isolateId?'Ver conjunto':'Aislar';if(isolateId)focusPart(id);};
@@ -71,7 +72,7 @@ function focusPart(id){
 }
 function setView(view){
  if(!ready)return;
- isolateId=null;hidden.clear();xray=false;
+ isolateId=null;topicIds=null;$('#topic-status').hidden=true;hidden.clear();xray=false;
  Object.keys(groupLabels).forEach(g=>enabled.add(g));
  let target=new THREE.Vector3(0,.48,0),position=new THREE.Vector3(7.2,5.3,8.8);
  if(view==='suspension'){
@@ -86,7 +87,8 @@ function setView(view){
 }
 function wireDiscover(){const button=$('#discover-suspension');if(button)button.onclick=()=>{setView('suspension');selectPart('SU-EQUALIZER--1',true);};}
 async function loadGeometry(){
- const manifest=await fetch('assets/geometry.json').then(checkResponse).then(r=>r.json());
+ const manifest=await fetch('assets/geometry.json?r=R2').then(checkResponse).then(r=>r.json());
+ if(manifest.revision!==data.revision)throw new Error('La geometría y las fichas corresponden a revisiones distintas. Recargá la página.');
  let bytes=0;
  const chunks=await Promise.all(manifest.files.map(async file=>{
    const response=await fetch('assets/'+file);checkResponse(response);
@@ -95,7 +97,7 @@ async function loadGeometry(){
  }));
  const combined=new Uint8Array(manifest.compressedBytes);let offset=0;
  for(const chunk of chunks){combined.set(chunk,offset);offset+=chunk.length;}
- progress.textContent='Construyendo los 302 sólidos…';
+ progress.textContent='Construyendo los '+data.objects.length+' elementos…';
  if(!('DecompressionStream' in window))throw new Error('El navegador no admite descompresión del modelo. Usá una versión reciente de Chrome, Edge, Safari o Firefox.');
  const buffer=await new Response(new Blob([combined]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
  if(buffer.byteLength!==manifest.bytes)throw new Error('La descarga de la geometría está incompleta.');
@@ -155,15 +157,31 @@ function fallback(error){
  viewport.parentElement.appendChild(box);
 }
 $('#search').addEventListener('input',()=>{if(data)renderList();});
-$('#restore').onclick=()=>{hidden.clear();enabled.clear();Object.keys(groupLabels).forEach(g=>enabled.add(g));$('#search').value='';clearSelection();setView('general');};
+$('#restore').onclick=()=>{topicIds=null;$('#topic-status').hidden=true;hidden.clear();enabled.clear();Object.keys(groupLabels).forEach(g=>enabled.add(g));$('#search').value='';clearSelection();setView('general');};
 $('#clear-selection').onclick=clearSelection;
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 document.querySelectorAll('.nav-link').forEach(a=>a.addEventListener('click',()=>{document.querySelectorAll('.nav-link').forEach(x=>x.classList.toggle('active',x===a));}));
 wireDiscover();
+function sourceLinks(decision){return '<div class="source-links">'+(decision.sources||[]).map(key=>data.sources.find(s=>s.id===key)).filter(Boolean).map(s=>'<a target="_blank" rel="noopener" href="'+escapeHTML(s.source_url)+'">'+escapeHTML(s.title)+' ↗</a>').join('')+'</div>';}
+function showTopic(id){
+ const d=data.decisions.find(d=>d.id===id);if(!d)return;
+ topicIds=new Set(d.parts);isolateId=null;hidden.clear();xray=false;selected=null;$('#search').value='';
+ Object.keys(groupLabels).forEach(g=>enabled.add(g));
+ $('#topic-status').hidden=false;$('#topic-status').innerHTML='<span>'+escapeHTML(d.title)+' · '+d.parts.length+' elementos</span><button id="close-topic">Ver todo ×</button>';
+ $('#close-topic').onclick=()=>{topicIds=null;$('#topic-status').hidden=true;clearSelection();setView('general');};
+ clearSelection();
+ if(ready){const box=new THREE.Box3();d.parts.forEach(id=>{const m=meshes.get(id);if(m)box.expandByObject(m);});if(!box.isEmpty()){const c=box.getCenter(new THREE.Vector3()),distance=Math.max(1.3,box.getSize(new THREE.Vector3()).length()*1.6);camera.position.copy(c).add(new THREE.Vector3(1,.75,1).normalize().multiplyScalar(distance));controls.target.copy(c);controls.update();render();}}
+ document.querySelector('.workspace').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderKnowledge(){
+ $('#knowledge-count').textContent=data.decisions.length+' decisiones · '+data.relationCount+' relaciones explícitas en Nav IA';
+ $('#knowledge-cards').innerHTML=data.decisions.map((d,i)=>'<details class="knowledge-card" '+(i===0?'open':'')+'><summary><span class="decision-number">'+String(i+1).padStart(2,'0')+'</span>'+escapeHTML(d.title)+'</summary><div class="knowledge-body"><p>'+escapeHTML(d.body)+'</p><div class="validation"><strong>Falta validar</strong><p>'+escapeHTML(d.validation)+'</p></div>'+sourceLinks(d)+'<button class="topic-button" data-topic="'+escapeHTML(d.id)+'">Ver '+d.parts.length+' elementos del modelo ↗</button></div></details>').join('');
+ $('#knowledge-cards').querySelectorAll('[data-topic]').forEach(b=>b.onclick=()=>showTopic(b.dataset.topic));
+}
 try{
- data=await fetch('assets/parts.json').then(checkResponse).then(r=>r.json());
+ data=await fetch('assets/parts.json?r=R2').then(checkResponse).then(r=>r.json());
  for(const part of data.objects)part.search=normalize(part.id+' '+part.name+' '+part.notes.map(n=>n.body).join(' '));
- renderGroups();renderList();
+ renderGroups();renderList();renderKnowledge();
  initRenderer();const buffer=await loadGeometry();createMeshes(buffer);
 }catch(error){fallback(error);}
 

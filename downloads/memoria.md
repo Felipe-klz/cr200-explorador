@@ -1,3 +1,97 @@
+# CR200 · Revisión R2
+
+Revisión Nav IA: 6664a0814f4c47af8a4242394c21651d
+
+La revisión R2 sustituye los criterios R1 en los componentes modificados. El anexo histórico R1 se conserva al final como antecedente. No liberado para fabricación ni circulación.
+
+## Decisiones y requisitos de validación
+
+### R2-D01 · Cargas transversales en los colgantes
+
+Se incorporan tres puentesC75 ×40 ×4 entre orejas y se corrigen cuatro cartelas interiores degeneradas de R1. Las seis placas de reparto tienen extremos achaflanados. Se conserva el sistema tándem con eje de ballestas bajo largueros.
+
+**Falta validar:** Modelo de placas/canales, soldaduras, pared de RHS y torsión por bache unilateral. La sección del manualDexter es analogía, no prescripción exacta para este2t.
+
+Fuentes: [Dexter montaje de soportes](https://www.dextergroup.com/user_area/content_media/raw/2020-03_059-203-00_HangerandAPInstructionSheet.pdf), [Steel Tube Institute / Packer: fatiga de uniones tubulares](https://steeltubeinstitute.org/wp-content/uploads/2020/09/HSS_Article_HSS_Poles_1119_060120.pdf)
+
+### R2-D02 · Amortiguadores con carrera e interfaces explícitas
+
+Se cambia referencia de Monroe555001 a Lippert283271, recolocando punto superior:dx160/dz200 mm. Se modelan ménsulas nervadas, placas perpendiculares, gomas y arandelas. Se descarta kit exterior por falta de espacio lateral.
+
+**Falta validar:** Cerrar referencia OEM, curva fuerza/velocidad, compresión de gomas, envolvente cinemática con balancín y cargas de soporte. No usar el amortiguador como limitador. Márgenes algebraicos no son validación dinámica.
+
+Fuentes: [Lippert: soluciones de amortiguación y longitudes](https://media.lippert.com/Design%20Team/Catalogs/Lippert_Catalog_OEM.pdf), [CURT/Lippert281255: límites de aplicación del kit](https://www.curtmfg.com/part/281255)
+
+### R2-D03 · Vivienda unida mediante casquillos de compresión
+
+Diez anclajes incorporan EPDM3, casquilloØ16/11 L30, contraplaca70 ×60 ×3 y M10-8.8. Piso30mm es una hipótesis explícita. No se perforan los largueros principales.
+
+**Falta validar:** Definir piso real y cargas de vivienda. Resolver corte, arrancamiento, vuelco, precarga y fatiga; estudiar flexibilidad conjunta. No presentar EPDM3 como desacople torsional.
+
+Fuentes: [Steel Tube Institute / Packer: fatiga de uniones tubulares](https://steeltubeinstitute.org/wp-content/uploads/2020/09/HSS_Article_HSS_Poles_1119_060120.pdf)
+
+### R2-D04 · Instalación eléctrica protegida y mantenible
+
+Mazo por dentro de larguero, presillas a400 mm, dos cajas de derivación, cuatro bucles hacia frenos; par dedicado de alimentación y retorno y conexión en paralelo.
+
+**Falta validar:** Comprobar radios mínimos, flexión repetida y roce durante articulación. Recalcular caída con ruta real y temperatura; verificar en banco corriente por imán, tensión, fusibles y conexión de ruptura según sistema definitivo.
+
+Fuentes: [Dexter preguntas técnicas de frenos](https://www.dextergroup.com/contact/faqs/brakes)
+
+### R2-D05 · Estacionamiento con fundas y reacción fija
+
+El tirante diagonal sin soporte se sustituye por cuatro rutas Bowden, dos soportes de reacción y travesaño auxiliar. Mantiene compensador central y ramales a palancas de frenos.
+
+**Falta validar:** Seleccionar cables, terminales, radios y fuerzas OEM. Calcular reacciones, carrera, compensación y retención en pendiente con PBT real; prueba de estacionamiento indispensable.
+
+Fuentes: [Dexter Product Bulletin413](https://www.dextergroup.com/user_area/content_media/raw/pb413AdjusterSpring.pdf)
+
+### R2-D06 · Lanza: continuidad de cargas y soporte jockey
+
+Se revisa transición de cartela al brazo y al alma del larguero; se añade consola de fijación de jockey. El brazo no cambia de sección. Las cadenas siguen siendo representación sin WLL confirmada.
+
+**Falta validar:** Análisis combinado de frenada, bola, torsión, fatiga y nudos. Certificar S del cabezal≥200kg y capacidades de cadenas, anclajes y jockey; ajustar remates al brazo real. No asumir que3500kg implica S suficiente.
+
+Fuentes: [CM/AL-KO catálogo2026, página11](https://cmtrailer.co.nz/sites/default/files/CM-2026%20Catalogue.pdf), [Steel Tube Institute / Packer: fatiga de uniones tubulares](https://steeltubeinstitute.org/wp-content/uploads/2020/09/HSS_Article_HSS_Poles_1119_060120.pdf)
+
+### R2-D07 · Compra de tren rodante como configuración aprobada
+
+Conservar ejes de pedidoHF2260/SC1925 y no recortar un eje de catálogo. Rodamientos, husillos y frenos del CAD son representaciones; deben comprarse como conjunto compatible y trazable.
+
+**Falta validar:** PlanoOEM con camber,toe,cotas de asientos,tolerancias,capacidad dinámica, rueda/PCD/offset y manual de aprietes. Pesaje por rueda y verificación de alineación cargado. Sin tolerancias de mecanizado inventadas.
+
+Fuentes: [Dexter D35, ejemplo de eje recto](https://dexterindex.com/product/76653), [Dexter Product Bulletin413](https://www.dextergroup.com/user_area/content_media/raw/pb413AdjusterSpring.pdf), [Goodyear Endurance, ficha y cargas](https://www.goodyearrvtires.com/pdfs/goodyear_rv_brochure.pdf), [Lippert: documentación de integración de ejes](https://support.lci1.com/spring-axles)
+
+### R2-D08 · Protección anticorrosiva definida por proceso
+
+Se adopta para desarrollo sistema pintado: preparación abrasiva y sistema epoxi/poliuretano especificado por proveedor según ambiente, reparación de cantos y protección interior por cavidades. Galvanizado por inmersión es alternativa pendiente de rediseño de venteos de todas las celdas.
+
+**Falta validar:** Elegir esquema de pintura,espesores secos,preparación y control por proveedor. Antes de galvanizar rediseñar acceso/venteo/drenaje y solapes con galvanizador; no fabricar células herméticas para inmersión.
+
+Fuentes: [AGA: venteo y drenaje de RHS](https://galvanizeit.org/knowledgebase/article/venting-and-drainage-holes-in-square-and-circular-tubular-assemblies)
+
+### R2-D09 · Guardabarros y apoyos: accesorios sin capacidad implícita
+
+Guardabarros y estabilizadores siguen como envolventes de desarrollo; los estabilizadores sólo actúan estacionados. Definir puntos de elevación en bastidor con refuerzos calculados: no usar el eje, amortiguadores o estabilizadores para elevar la unidad.
+
+**Falta validar:** Verificar acceso para desmontar ruedas, barrido3D a carga y rebote, impacto de piedras y fijaciones. Seleccionar estabilizadores comerciales y cierre de transporte. No inventar500kg de capacidad del CAD.
+
+Fuentes: [Dexter montaje de soportes](https://www.dextergroup.com/user_area/content_media/raw/2020-03_059-203-00_HangerandAPInstructionSheet.pdf), [Lippert: documentación de integración de ejes](https://support.lci1.com/spring-axles)
+
+### R2-D10 · Plan de verificación del vehículo completo
+
+Definir matriz de cargas: vertical simétrica, bache unilateral/torsión, frenada, giro, carga vertical de enganche y casos de estacionamiento. FEM con estudio de convergencia y uniones; luego ensayos de prototipo. Masa, CG y frenado dependen de la vivienda terminada.
+
+**Falta validar:** No hay FEM ejecutado, ensayo físico ni homologación. La revisión CAD comprueba generación y geometría seleccionada, no resistencia, fatiga, estabilidad o cumplimiento vial. Conservar ruta O2 publicada; confirmar encuadre de fabricación nueva antes de construir.
+
+Fuentes: [Dexter montaje de soportes](https://www.dextergroup.com/user_area/content_media/raw/2020-03_059-203-00_HangerandAPInstructionSheet.pdf), [ANSV53/2025](https://www.boletinoficial.gob.ar/detalleAviso/primera/322541/20250314?anexos=1), [Steel Tube Institute / Packer: fatiga de uniones tubulares](https://steeltubeinstitute.org/wp-content/uploads/2020/09/HSS_Article_HSS_Poles_1119_060120.pdf)
+
+## Inventario y alcance
+
+336 elementos del visor,26 revisados y34 añadidos. Los conjuntos de tornillería son ítems compuestos. No hay cálculo FEM ni ensayo físico ejecutado. Los márgenes nominales del amortiguador son15.655 mm a compresión de70 mm y7.984 mm a extensión de50 mm. Requieren cinemática articulada real y confirmación de referencias de montaje OEM.
+
+## Antecedente histórico R1 (no vigente en piezas modificadas)
+
 # CR200 · 4400 × 2000 mm · diseño mecánico detallado
 
 Fecha: 24/10/2026. Caso Nav IA: `CR200-4400X2000-DETALLE-20261024`. Rama main. Revisión `17b374f628144c82a372a24a26f634a6`.
