@@ -1,0 +1,199 @@
+{
+  "scope": "S02-A: union central delantera izquierda; no suspension completa",
+  "checked_pairs_bounding_boxes": 77,
+  "neighbor_pool": 144,
+  "internal_clashes": [],
+  "unresolved_neighbor_clashes": [
+    {
+      "a": "SU-LEAF--1-0-0",
+      "b": "EL-PARKCABLE",
+      "overlap_mm3": 764.6631810821143
+    },
+    {
+      "a": "SU-LEAF--1-0-1",
+      "b": "EL-HARNESS",
+      "overlap_mm3": 77.43233592384364
+    },
+    {
+      "a": "SU-LEAF--1-0-1",
+      "b": "EL-PARKCABLE",
+      "overlap_mm3": 2704.5676757965393
+    },
+    {
+      "a": "SU-LEAF--1-0-2",
+      "b": "EL-HARNESS",
+      "overlap_mm3": 766.0408228733996
+    },
+    {
+      "a": "SU-LEAF--1-0-2",
+      "b": "EL-PARKCABLE",
+      "overlap_mm3": 1858.1898547512556
+    },
+    {
+      "a": "RU-TIEPLATE-0--1",
+      "b": "RU-BACKPLATE-0--1",
+      "overlap_mm3": 5500.0
+    },
+    {
+      "a": "RU-TIEPLATE-0--1",
+      "b": "EL-HARNESS",
+      "overlap_mm3": 159.02357593234743
+    },
+    {
+      "a": "RU-UBOLT-0--1-0",
+      "b": "EL-HARNESS",
+      "overlap_mm3": 266.78003097716834
+    },
+    {
+      "a": "RU-UNUT-0--1-0--1",
+      "b": "RU-BACKPLATE-0--1",
+      "overlap_mm3": 59.20458499319264
+    },
+    {
+      "a": "RU-UNUT-0--1-0-1",
+      "b": "RU-BACKPLATE-0--1",
+      "overlap_mm3": 59.20458499319264
+    }
+  ],
+  "shapes": [
+    {
+      "id": "SU-LEAF--1-0-0",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "SU-LEAF--1-0-1",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "SU-LEAF--1-0-2",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "RU-TIEPLATE-0--1",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "RU-SEAT-0--1",
+      "valid": false,
+      "solids": 1
+    },
+    {
+      "id": "SU-CENTERBOLT--1-0",
+      "valid": true,
+      "solids": 2
+    },
+    {
+      "id": "RU-UBOLT-0--1-0",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "RU-UNUT-0--1-0--1",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "RU-UNUT-0--1-0-1",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "RU-UBOLT-0--1-1",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "RU-UNUT-0--1-1--1",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "id": "RU-UNUT-0--1-1-1",
+      "valid": true,
+      "solids": 1
+    }
+  ],
+  "contacts": [
+    {
+      "a": "SU-LEAF--1-0-0",
+      "b": "RU-TIEPLATE-0--1",
+      "fused_solids": 1
+    },
+    {
+      "a": "SU-LEAF--1-0-2",
+      "b": "RU-SEAT-0--1",
+      "fused_solids": 1
+    },
+    {
+      "a": "SU-LEAF--1-0-0",
+      "b": "SU-LEAF--1-0-1",
+      "fused_solids": 1
+    },
+    {
+      "a": "SU-LEAF--1-0-1",
+      "b": "SU-LEAF--1-0-2",
+      "fused_solids": 1
+    }
+  ],
+  "s01_interface": {
+    "lower_bracket_master_leaf_gap_mm": 10.274999999999977,
+    "bracket_tieplate_fused_solids": 1
+  },
+  "broad_phase": "Mallas de los336 elementos R2, candidatos S02-A y piezas S01 actualizadas; cálculo BREP de candidatos por cajas delimitadoras",
+  "revision": "62bc86d839804d46b187ff3c0e3a18a2",
+  "build_id": "0714a2bb9f40493d8f88c83b682ab7d9",
+  "source_url": "https://static.nhtsa.gov/odi/tsbs/2024/MC-11002352-0001.pdf",
+  "source_page": 14,
+  "before": {
+    "pairs": [
+      {
+        "a": "SU-LEAF--1-0-0",
+        "b": "RU-TIEPLATE-0--1",
+        "overlap_mm3": 1292.6543666804155,
+        "gap_mm": 0.0
+      },
+      {
+        "a": "SU-LEAF--1-0-3",
+        "b": "RU-SEAT-0--1",
+        "overlap_mm3": 0.0,
+        "gap_mm": 0.0
+      },
+      {
+        "a": "SU-CENTERBOLT--1-0",
+        "b": "SU-LEAF--1-0-0",
+        "overlap_mm3": 379.73137262164977,
+        "gap_mm": 0.0
+      },
+      {
+        "a": "SU-CENTERBOLT--1-0",
+        "b": "RU-TIEPLATE-0--1",
+        "overlap_mm3": 636.172512351934,
+        "gap_mm": 0.0
+      },
+      {
+        "a": "SU-CENTERBOLT--1-0",
+        "b": "RU-SEAT-0--1",
+        "overlap_mm3": 298.6424819334632,
+        "gap_mm": 0.0
+      },
+      {
+        "a": "RU-UBOLT-0--1-0",
+        "b": "RU-AXLETUBE-0",
+        "overlap_mm3": 0.0,
+        "gap_mm": 0.0
+      },
+      {
+        "a": "SU-BUSH--1-0-0",
+        "b": "SU-PIN--1-0",
+        "overlap_mm3": 0.0,
+        "gap_mm": 0.006249999999832779
+      }
+    ],
+    "master_leaf_solids": 3,
+    "ubolt_solids": 14
+  }
+}
