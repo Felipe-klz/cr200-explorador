@@ -1,0 +1,330 @@
+{
+  "subassembly": "S01 · Amortiguación",
+  "baseline_revision": "6664a0814f4c47af8a4242394c21651d",
+  "method": "BRep/OCCT en FreeCAD mediante MCP Nav IA. Comparación de distancias y volúmenes comunes; continuidad mediante unión booleana. Tolerancia de reporte de solape0.001 mm³.",
+  "audited_items": [
+    "SU-DAMPER-0--1",
+    "SU-DAMPERUP-0--1",
+    "SU-DAMPERLOW-0--1",
+    "SU-DAMPERKIT-0--1",
+    "SU-DAMPER-0-1",
+    "SU-DAMPERUP-0-1",
+    "SU-DAMPERLOW-0-1",
+    "SU-DAMPERKIT-0-1",
+    "SU-DAMPER-1--1",
+    "SU-DAMPERUP-1--1",
+    "SU-DAMPERLOW-1--1",
+    "SU-DAMPERKIT-1--1",
+    "SU-DAMPER-1-1",
+    "SU-DAMPERUP-1-1",
+    "SU-DAMPERLOW-1-1",
+    "SU-DAMPERKIT-1-1"
+  ],
+  "before": {
+    "revision": "6664a0814f4c47af8a4242394c21651d",
+    "pairs": [
+      {
+        "a": "SU-DAMPER-0--1",
+        "b": "RU-AXLETUBE-0",
+        "distance_mm": 0.0,
+        "overlap_mm3": 6818.552221340624
+      },
+      {
+        "a": "SU-DAMPERUP-0--1",
+        "b": "SU-DAMPERKIT-0--1",
+        "distance_mm": 0.0,
+        "overlap_mm3": 794.6077818991512
+      },
+      {
+        "a": "SU-DAMPERLOW-0--1",
+        "b": "SU-DAMPERKIT-0--1",
+        "distance_mm": 0.0,
+        "overlap_mm3": 73.24268813786702
+      },
+      {
+        "a": "SU-DAMPERLOW-0--1",
+        "b": "RU-TIEPLATE-0--1",
+        "distance_mm": 0.0,
+        "overlap_mm3": 0.0
+      },
+      {
+        "a": "SU-DAMPERUP-0--1",
+        "b": "FR-DOUBLER--1-0",
+        "distance_mm": 0.0,
+        "overlap_mm3": 0.0
+      },
+      {
+        "a": "SU-DAMPERUP-0--1",
+        "b": "FR-LONG-I",
+        "distance_mm": 6.0,
+        "overlap_mm3": 0.0
+      },
+      {
+        "a": "SU-DAMPERLOW-0--1",
+        "b": "RU-AXLETUBE-0",
+        "distance_mm": 0.0,
+        "overlap_mm3": 290.8799607705777
+      },
+      {
+        "a": "SU-DAMPERLOW-0--1",
+        "b": "SU-LEAF--1-0-0",
+        "distance_mm": 7.774999999999977,
+        "overlap_mm3": 0.0
+      }
+    ],
+    "weldments": [
+      {
+        "id": "SU-DAMPERUP-0--1",
+        "individual_solids": 4,
+        "connected_solids": 1,
+        "valid": true
+      },
+      {
+        "id": "SU-DAMPERLOW-0--1",
+        "individual_solids": 6,
+        "connected_solids": 3,
+        "valid": true
+      }
+    ]
+  },
+  "nominal_checks": [
+    {
+      "axle": 0,
+      "side": -1,
+      "neighbors_checked": 43,
+      "hits": [],
+      "internal_hits": [],
+      "weldments": [
+        {
+          "id": "SU-DAMPERUP-0--1",
+          "solid_count": 1,
+          "valid": true
+        },
+        {
+          "id": "SU-DAMPERLOW-0--1",
+          "solid_count": 1,
+          "valid": true
+        }
+      ],
+      "interfaces": [
+        {
+          "parts": [
+            "SU-DAMPERUP-0--1",
+            "FR-DOUBLER--1-0"
+          ],
+          "joined_solids": 1
+        },
+        {
+          "parts": [
+            "SU-DAMPERLOW-0--1",
+            "RU-TIEPLATE-0--1"
+          ],
+          "joined_solids": 1
+        }
+      ],
+      "shock_axle_gap_mm": 29.96388453865159,
+      "lower_axle_gap_mm": 19.29968589674878,
+      "lower_leaf_gap_mm": 10.274999999999977
+    },
+    {
+      "axle": 0,
+      "side": 1,
+      "neighbors_checked": 41,
+      "hits": [],
+      "internal_hits": [],
+      "weldments": [
+        {
+          "id": "SU-DAMPERUP-0-1",
+          "solid_count": 1,
+          "valid": true
+        },
+        {
+          "id": "SU-DAMPERLOW-0-1",
+          "solid_count": 1,
+          "valid": true
+        }
+      ],
+      "interfaces": [
+        {
+          "parts": [
+            "SU-DAMPERUP-0-1",
+            "FR-DOUBLER-1-0"
+          ],
+          "joined_solids": 1
+        },
+        {
+          "parts": [
+            "SU-DAMPERLOW-0-1",
+            "RU-TIEPLATE-0-1"
+          ],
+          "joined_solids": 1
+        }
+      ],
+      "shock_axle_gap_mm": 29.96388453865159,
+      "lower_axle_gap_mm": 19.299685896748723,
+      "lower_leaf_gap_mm": 10.274999999999636
+    },
+    {
+      "axle": 1,
+      "side": -1,
+      "neighbors_checked": 36,
+      "hits": [],
+      "internal_hits": [],
+      "weldments": [
+        {
+          "id": "SU-DAMPERUP-1--1",
+          "solid_count": 1,
+          "valid": true
+        },
+        {
+          "id": "SU-DAMPERLOW-1--1",
+          "solid_count": 1,
+          "valid": true
+        }
+      ],
+      "interfaces": [
+        {
+          "parts": [
+            "SU-DAMPERUP-1--1",
+            "FR-DOUBLER--1-2"
+          ],
+          "joined_solids": 1
+        },
+        {
+          "parts": [
+            "SU-DAMPERLOW-1--1",
+            "RU-TIEPLATE-1--1"
+          ],
+          "joined_solids": 1
+        }
+      ],
+      "shock_axle_gap_mm": 29.96388453865159,
+      "lower_axle_gap_mm": 19.2996858967484,
+      "lower_leaf_gap_mm": 10.274999999999977
+    },
+    {
+      "axle": 1,
+      "side": 1,
+      "neighbors_checked": 34,
+      "hits": [],
+      "internal_hits": [],
+      "weldments": [
+        {
+          "id": "SU-DAMPERUP-1-1",
+          "solid_count": 1,
+          "valid": true
+        },
+        {
+          "id": "SU-DAMPERLOW-1-1",
+          "solid_count": 1,
+          "valid": true
+        }
+      ],
+      "interfaces": [
+        {
+          "parts": [
+            "SU-DAMPERUP-1-1",
+            "FR-DOUBLER-1-2"
+          ],
+          "joined_solids": 1
+        },
+        {
+          "parts": [
+            "SU-DAMPERLOW-1-1",
+            "RU-TIEPLATE-1-1"
+          ],
+          "joined_solids": 1
+        }
+      ],
+      "shock_axle_gap_mm": 29.96388453865159,
+      "lower_axle_gap_mm": 19.29968589674821,
+      "lower_leaf_gap_mm": 10.274999999999977
+    }
+  ],
+  "vertical_motion_front_left": [
+    {
+      "wheel_dz_mm": -50,
+      "length_mm": 296.8164415931166,
+      "shock_axle_gap_mm": 26.816935273686763,
+      "shock_axle_overlap_mm3": 0.0,
+      "lower_axle_gap_mm": 19.299685896748382,
+      "lower_axle_overlap_mm3": 0.0
+    },
+    {
+      "wheel_dz_mm": -25,
+      "length_mm": 276.08875384557047,
+      "shock_axle_gap_mm": 28.252551494262935,
+      "shock_axle_overlap_mm3": 0.0,
+      "lower_axle_gap_mm": 19.29968589674828,
+      "lower_axle_overlap_mm3": 0.0
+    },
+    {
+      "wheel_dz_mm": 0,
+      "length_mm": 256.12496949731394,
+      "shock_axle_gap_mm": 29.96388453865159,
+      "shock_axle_overlap_mm3": 0.0,
+      "lower_axle_gap_mm": 19.299685896748244,
+      "lower_axle_overlap_mm3": 0.0
+    },
+    {
+      "wheel_dz_mm": 35,
+      "length_mm": 229.83689869122406,
+      "shock_axle_gap_mm": 32.9346538281222,
+      "shock_axle_overlap_mm3": 0.0,
+      "lower_axle_gap_mm": 19.29968589674835,
+      "lower_axle_overlap_mm3": 0.0
+    },
+    {
+      "wheel_dz_mm": 70,
+      "length_mm": 206.15528128088303,
+      "shock_axle_gap_mm": 36.73285224223438,
+      "shock_axle_overlap_mm3": 0.0,
+      "lower_axle_gap_mm": 19.299685896748656,
+      "lower_axle_overlap_mm3": 0.0
+    }
+  ],
+  "stud_mount_check_front_left": [
+    {
+      "wheel_dz_mm": -50,
+      "stud_to_static_mount_angle_deg": -6.040565182897261,
+      "upper_overlap_mm3": 0.0,
+      "lower_overlap_mm3": 0.0
+    },
+    {
+      "wheel_dz_mm": 0,
+      "stud_to_static_mount_angle_deg": 0.0,
+      "upper_overlap_mm3": 0.0,
+      "lower_overlap_mm3": 0.0
+    },
+    {
+      "wheel_dz_mm": 70,
+      "stud_to_static_mount_angle_deg": 12.246332859680408,
+      "upper_overlap_mm3": 0.0,
+      "lower_overlap_mm3": 0.0
+    }
+  ],
+  "tool_access_front_left": [
+    {
+      "mount": "lower",
+      "envelope": "R20,17mm sobre tuerca exterior; aproximación llave corta, no vaso largo",
+      "hits": []
+    },
+    {
+      "mount": "upper",
+      "envelope": "R20,17mm sobre tuerca exterior; aproximación llave corta, no vaso largo",
+      "hits": []
+    }
+  ],
+  "candidate_sha256": "16ba3f1af7eb4d64d0d8e41bd34125d6e645c800cc64e0e9a927f2960a9b562a",
+  "scope_limits": [
+    "Posición nominal de los cuatro montajes, con sus vecinos individuales.",
+    "Cinco posiciones de traslación vertical aislada sólo en montaje delantero izquierdo; no es cinemática de ballestas, gemelas, eje y balancín.",
+    "Gomas representadas sin deformación. Confirmar capacidad angular para aproximadamente-6.04°/+12.25° respecto del montaje nominal.",
+    "Envolvente de llave cortaR20/17 mm; no un modelo de herramienta comercial ni acceso con vaso largo.",
+    "Dimensiones de envolvente del amortiguador y herrajes pendientes de plano OEM.",
+    "No se calcularon fuerza-velocidad, resistencia, fatiga ni soldaduras. No hay validación física ni homologación."
+  ],
+  "next_subassembly": "S02 · Suspensión tándem: asiento de hojas, ojos, bujes, gemelas, balancín, colgantes y trayectoria real.",
+  "revision": "8ebb56e988124862b1b904e39120e048",
+  "build_id": "62c12a13be4b4892b0c10b1c331c9abd"
+}
