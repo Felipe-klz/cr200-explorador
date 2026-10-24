@@ -49,7 +49,7 @@ function selectPart(id,focus=false){
  selected=id;hidden.delete(id);enabled.add(part.group);if(isolateId)isolateId=id;if(focus&&ready)xray=true;
  const notes=part.notes.map(n=>'<details '+(['function','material'].includes(n.title)?'open':'')+'><summary>'+escapeHTML(titles[n.title]||n.title)+'</summary><p>'+escapeHTML(n.body)+'</p></details>').join('');
  const decisions=(part.decisions||[]).map(key=>data.decisions.find(d=>d.id===key)).filter(Boolean).map(d=>'<details class="decision-note" open><summary>'+escapeHTML(d.title)+'</summary><p>'+escapeHTML(d.body)+'</p><strong>Para validar</strong><p>'+escapeHTML(d.validation)+'</p>'+sourceLinks(d)+'</details>').join('');
- $('#inspector').innerHTML='<div class="inspector-head"><code>'+escapeHTML(id)+'</code><h2>'+escapeHTML(part.name)+'</h2><span class="inspector-label">Ficha de desarrollo · '+escapeHTML(groupLabels[part.group])+'</span><p class="audit-label '+(part.audit?'audit-checked':'')+'">'+(part.audit?'S01 · Geometría nominal revisada. Función y resistencia pendientes.':'Pendiente de auditoría por subensamble.')+'</p><div class="selection-actions"><button id="focus-part">Acercar</button><button id="isolate-part">'+(isolateId?'Ver conjunto':'Aislar')+'</button><button id="hide-part">Ocultar</button><button id="xray-part">'+(xray?'Opaco':'Ver interior')+'</button></div></div><div class="info-notes">'+decisions+notes+'<p class="small-note">Las referencias de catálogo no acreditan homologación de esta pieza ni del vehículo completo. Consultá la sección Normativa.</p></div>';
+ $('#inspector').innerHTML='<div class="inspector-head"><code>'+escapeHTML(id)+'</code><h2>'+escapeHTML(part.name)+'</h2><span class="inspector-label">Ficha de desarrollo · '+escapeHTML(groupLabels[part.group])+'</span><p class="audit-label '+(part.audit?'audit-checked':'')+'">'+(part.auditLabel?escapeHTML(part.auditLabel):(part.audit?'S01 · Geometría nominal revisada. Función y resistencia pendientes.':'Pendiente de auditoría por subensamble.'))+'</p><div class="selection-actions"><button id="focus-part">Acercar</button><button id="isolate-part">'+(isolateId?'Ver conjunto':'Aislar')+'</button><button id="hide-part">Ocultar</button><button id="xray-part">'+(xray?'Opaco':'Ver interior')+'</button></div></div><div class="info-notes">'+decisions+notes+'<p class="small-note">Las referencias de catálogo no acreditan homologación de esta pieza ni del vehículo completo. Consultá la sección Normativa.</p></div>';
  $('#inspector').scrollTop=0;
  $('#focus-part').onclick=()=>focusPart(id);
  $('#isolate-part').onclick=()=>{isolateId=isolateId?null:id;applyVisibility();$('#isolate-part').textContent=isolateId?'Ver conjunto':'Aislar';if(isolateId)focusPart(id);};
@@ -87,7 +87,7 @@ function setView(view){
 }
 function wireDiscover(){const button=$('#discover-suspension');if(button)button.onclick=()=>{setView('suspension');selectPart('SU-EQUALIZER--1',true);};}
 async function loadGeometry(){
- const manifest=await fetch('assets/geometry.json?r=S01').then(checkResponse).then(r=>r.json());
+ const manifest=await fetch('assets/geometry.json?r=S02A').then(checkResponse).then(r=>r.json());
  if(manifest.revision!==data.revision)throw new Error('La geometría y las fichas corresponden a revisiones distintas. Recargá la página.');
  let bytes=0;
  const chunks=await Promise.all(manifest.files.map(async file=>{
@@ -177,10 +177,11 @@ function renderKnowledge(){
  $('#knowledge-count').textContent=data.decisions.length+' decisiones · '+data.relationCount+' relaciones explícitas en Nav IA';
  $('#knowledge-cards').innerHTML=data.decisions.map((d,i)=>'<details class="knowledge-card" '+(i===0?'open':'')+'><summary><span class="decision-number">'+String(i+1).padStart(2,'0')+'</span>'+escapeHTML(d.title)+'</summary><div class="knowledge-body"><p>'+escapeHTML(d.body)+'</p><div class="validation"><strong>Falta validar</strong><p>'+escapeHTML(d.validation)+'</p></div>'+sourceLinks(d)+'<button class="topic-button" data-topic="'+escapeHTML(d.id)+'">Ver '+d.parts.length+' elementos del modelo ↗</button></div></details>').join('');
  $('#knowledge-cards').querySelectorAll('[data-topic]').forEach(b=>b.onclick=()=>showTopic(b.dataset.topic));
+ const s02Button=$('#explore-s02a');if(s02Button)s02Button.onclick=()=>showTopic('S02-A-D01');
  const auditButton=$('#explore-audit');if(auditButton)auditButton.onclick=()=>showTopic('S01-D01');
 }
 try{
- data=await fetch('assets/parts.json?r=S01').then(checkResponse).then(r=>r.json());
+ data=await fetch('assets/parts.json?r=S02A').then(checkResponse).then(r=>r.json());
  for(const part of data.objects)part.search=normalize(part.id+' '+part.name+' '+part.notes.map(n=>n.body).join(' '));
  renderGroups();renderList();renderKnowledge();
  initRenderer();const buffer=await loadGeometry();createMeshes(buffer);

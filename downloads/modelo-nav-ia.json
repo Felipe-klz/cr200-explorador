@@ -4335,13 +4335,15 @@
     {
       "id": "SU-LEAF--1-0-0",
       "parent_id": "SUSP",
-      "description": "Hoja maestra con ojos · elástico doble ojo",
+      "description": "Hoja 1/3 · paquete delantero izquierdo · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nxc=2220.9;yc=-962.5;ez=params[\"ez\"];w=44.45;t=5.969;span=660.4;full=660.4\npts=[]\nfor k in range(41):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-0*t\n    pts.append((xc+u,yc-w/2,z))\nfor k in range(40,-1,-1):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-1*t\n    pts.append((xc+u,yc-w/2,z))\nshape=polyprism(pts,(0,w,0))\nshape=shape.fuse(ring(17.069,11.1,w,(1890.7,yc-w/2,ez))).fuse(ring(17.069,11.1,w,(2551.1,yc-w/2,ez)))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: SU-LEAF--1-0-0\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nspan=660.4;layer=0\ndef edge(a,b,offset):\n if abs(a)<=60 and abs(b)<=60:return Part.makeLine(V(xc+a,yc-w/2,top-offset),V(xc+b,yc-w/2,top-offset))\n derivative=2*(44.45-11.1)*max(0,abs(a)-60)/(330.2-60)**2*(-1 if a<0 else 1)\n c=Part.BezierCurve();c.setPoles([V(xc+a,yc-w/2,profile(a)-offset),V(xc+(a+b)/2,yc-w/2,profile(a)+derivative*(b-a)/2-offset),V(xc+b,yc-w/2,profile(b)-offset)]);return c.toShape()\nintervals=[(-span/2,-60),(-60,60),(60,span/2)]\nupper=[edge(a,b,layer*t) for a,b in intervals];lower=[edge(a,b,(layer+1)*t) for a,b in intervals]\nfor e in lower:e.reverse()\nedges=upper+[Part.makeLine(V(xc+span/2,yc-w/2,profile(span/2)-layer*t),V(xc+span/2,yc-w/2,profile(span/2)-(layer+1)*t))]+list(reversed(lower))+[Part.makeLine(V(xc-span/2,yc-w/2,profile(-span/2)-(layer+1)*t),V(xc-span/2,yc-w/2,profile(-span/2)-layer*t))]\nshape=Part.Face(Part.Wire(edges)).extrude(V(0,w,0))\nif layer==0:\n for xx in [xc-330.2,xc+330.2]:\n  eye=cyl(11.1+t,w,xx,yc-w/2,ez,(0,1,0)).cut(cyl(11.1,w,xx,yc-w/2,ez,(0,1,0)))\n  shape=shape.fuse(eye)\nshape=shape.cut(cyl(4.25,stack+4,xc,yc,top-stack-2)).removeSplitter()\nassert len(shape.Solids)==1,'Hoja desconectada'\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -4351,58 +4353,71 @@
         ],
         "material": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
         "part_number": "SU-LEAF--1-0-0",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Hoja maestra con ojos · elástico doble ojo. Transmitir fuerzas al soporte mediante ojos y alojar bujes; pieza de compra tratada térmicamente.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Transmitir fuerzas al soporte mediante ojos y alojar bujes; pieza de compra tratada térmicamente.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Paquete de referencia072-022-00:1250 lb=566.99 kg por resorte. Ancho44.45 mm, altura de paquete23.876 y flecha cargada44.45. La división visual en4 hojas y sus longitudes son aproximaciones, sin atribuir capacidad a hojas individuales.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Comprar paquete completo certificado y pareado por carga. No fabricar resorte a partir de la parábolaCAD.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Centro de eje a330.2 mm de ojo nominal; eje debajo del paquete, perno central enganchado en asiento. Ojos interiores unidos a balancín con gemelas orientadas hacia arriba.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Curva carga-flecha y longitud real entre ojos a900kg/eje deben confirmar posición estática. La flecha de catálogo es a carga nominal, no necesariamente la de operación.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "DEX-CAT; representación de montaje deformada nominal, no forma libre ni FEM de resorte.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -4410,13 +4425,15 @@
     {
       "id": "SU-LEAF--1-0-1",
       "parent_id": "SUSP",
-      "description": "Hoja graduada1 del paquete de elástico",
+      "description": "Hoja 2/3 · paquete delantero izquierdo · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nxc=2220.9;yc=-962.5;ez=params[\"ez\"];w=44.45;t=5.969;span=530;full=660.4\npts=[]\nfor k in range(41):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-1*t\n    pts.append((xc+u,yc-w/2,z))\nfor k in range(40,-1,-1):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-2*t\n    pts.append((xc+u,yc-w/2,z))\nshape=polyprism(pts,(0,w,0))\n\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: SU-LEAF--1-0-1\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nspan=530;layer=1\ndef edge(a,b,offset):\n if abs(a)<=60 and abs(b)<=60:return Part.makeLine(V(xc+a,yc-w/2,top-offset),V(xc+b,yc-w/2,top-offset))\n derivative=2*(44.45-11.1)*max(0,abs(a)-60)/(330.2-60)**2*(-1 if a<0 else 1)\n c=Part.BezierCurve();c.setPoles([V(xc+a,yc-w/2,profile(a)-offset),V(xc+(a+b)/2,yc-w/2,profile(a)+derivative*(b-a)/2-offset),V(xc+b,yc-w/2,profile(b)-offset)]);return c.toShape()\nintervals=[(-span/2,-60),(-60,60),(60,span/2)]\nupper=[edge(a,b,layer*t) for a,b in intervals];lower=[edge(a,b,(layer+1)*t) for a,b in intervals]\nfor e in lower:e.reverse()\nedges=upper+[Part.makeLine(V(xc+span/2,yc-w/2,profile(span/2)-layer*t),V(xc+span/2,yc-w/2,profile(span/2)-(layer+1)*t))]+list(reversed(lower))+[Part.makeLine(V(xc-span/2,yc-w/2,profile(-span/2)-(layer+1)*t),V(xc-span/2,yc-w/2,profile(-span/2)-layer*t))]\nshape=Part.Face(Part.Wire(edges)).extrude(V(0,w,0))\nif layer==0:\n for xx in [xc-330.2,xc+330.2]:\n  eye=cyl(11.1+t,w,xx,yc-w/2,ez,(0,1,0)).cut(cyl(11.1,w,xx,yc-w/2,ez,(0,1,0)))\n  shape=shape.fuse(eye)\nshape=shape.cut(cyl(4.25,stack+4,xc,yc,top-stack-2)).removeSplitter()\nassert len(shape.Solids)==1,'Hoja desconectada'\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -4426,58 +4443,71 @@
         ],
         "material": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
         "part_number": "SU-LEAF--1-0-1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Hoja graduada1 del paquete de elástico. Aportar rigidez progresiva por flexión y contacto entre hojas; no soldar ni perforar.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Aportar rigidez progresiva por flexión y contacto entre hojas; no soldar ni perforar.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Paquete de referencia072-022-00:1250 lb=566.99 kg por resorte. Ancho44.45 mm, altura de paquete23.876 y flecha cargada44.45. La división visual en4 hojas y sus longitudes son aproximaciones, sin atribuir capacidad a hojas individuales.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Comprar paquete completo certificado y pareado por carga. No fabricar resorte a partir de la parábolaCAD.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Centro de eje a330.2 mm de ojo nominal; eje debajo del paquete, perno central enganchado en asiento. Ojos interiores unidos a balancín con gemelas orientadas hacia arriba.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Curva carga-flecha y longitud real entre ojos a900kg/eje deben confirmar posición estática. La flecha de catálogo es a carga nominal, no necesariamente la de operación.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "DEX-CAT; representación de montaje deformada nominal, no forma libre ni FEM de resorte.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -4485,13 +4515,15 @@
     {
       "id": "SU-LEAF--1-0-2",
       "parent_id": "SUSP",
-      "description": "Hoja graduada2 del paquete de elástico",
+      "description": "Hoja 3/3 · paquete delantero izquierdo · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nxc=2220.9;yc=-962.5;ez=params[\"ez\"];w=44.45;t=5.969;span=400;full=660.4\npts=[]\nfor k in range(41):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-2*t\n    pts.append((xc+u,yc-w/2,z))\nfor k in range(40,-1,-1):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-3*t\n    pts.append((xc+u,yc-w/2,z))\nshape=polyprism(pts,(0,w,0))\n\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: SU-LEAF--1-0-2\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nspan=400;layer=2\ndef edge(a,b,offset):\n if abs(a)<=60 and abs(b)<=60:return Part.makeLine(V(xc+a,yc-w/2,top-offset),V(xc+b,yc-w/2,top-offset))\n derivative=2*(44.45-11.1)*max(0,abs(a)-60)/(330.2-60)**2*(-1 if a<0 else 1)\n c=Part.BezierCurve();c.setPoles([V(xc+a,yc-w/2,profile(a)-offset),V(xc+(a+b)/2,yc-w/2,profile(a)+derivative*(b-a)/2-offset),V(xc+b,yc-w/2,profile(b)-offset)]);return c.toShape()\nintervals=[(-span/2,-60),(-60,60),(60,span/2)]\nupper=[edge(a,b,layer*t) for a,b in intervals];lower=[edge(a,b,(layer+1)*t) for a,b in intervals]\nfor e in lower:e.reverse()\nedges=upper+[Part.makeLine(V(xc+span/2,yc-w/2,profile(span/2)-layer*t),V(xc+span/2,yc-w/2,profile(span/2)-(layer+1)*t))]+list(reversed(lower))+[Part.makeLine(V(xc-span/2,yc-w/2,profile(-span/2)-(layer+1)*t),V(xc-span/2,yc-w/2,profile(-span/2)-layer*t))]\nshape=Part.Face(Part.Wire(edges)).extrude(V(0,w,0))\nif layer==0:\n for xx in [xc-330.2,xc+330.2]:\n  eye=cyl(11.1+t,w,xx,yc-w/2,ez,(0,1,0)).cut(cyl(11.1,w,xx,yc-w/2,ez,(0,1,0)))\n  shape=shape.fuse(eye)\nshape=shape.cut(cyl(4.25,stack+4,xc,yc,top-stack-2)).removeSplitter()\nassert len(shape.Solids)==1,'Hoja desconectada'\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -4501,58 +4533,71 @@
         ],
         "material": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
         "part_number": "SU-LEAF--1-0-2",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Hoja graduada2 del paquete de elástico. Aportar rigidez progresiva por flexión y contacto entre hojas; no soldar ni perforar.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Aportar rigidez progresiva por flexión y contacto entre hojas; no soldar ni perforar.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Paquete de referencia072-022-00:1250 lb=566.99 kg por resorte. Ancho44.45 mm, altura de paquete23.876 y flecha cargada44.45. La división visual en4 hojas y sus longitudes son aproximaciones, sin atribuir capacidad a hojas individuales.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Comprar paquete completo certificado y pareado por carga. No fabricar resorte a partir de la parábolaCAD.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Centro de eje a330.2 mm de ojo nominal; eje debajo del paquete, perno central enganchado en asiento. Ojos interiores unidos a balancín con gemelas orientadas hacia arriba.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Curva carga-flecha y longitud real entre ojos a900kg/eje deben confirmar posición estática. La flecha de catálogo es a carga nominal, no necesariamente la de operación.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "DEX-CAT; representación de montaje deformada nominal, no forma libre ni FEM de resorte.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -4560,13 +4605,9 @@
     {
       "id": "SU-LEAF--1-0-3",
       "parent_id": "SUSP",
-      "description": "Hoja graduada3 del paquete de elástico",
+      "description": "Antecedente R2 · cuarta hoja retirada del paquete delantero izquierdo",
       "recipe": {
-        "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nxc=2220.9;yc=-962.5;ez=params[\"ez\"];w=44.45;t=5.969;span=270;full=660.4\npts=[]\nfor k in range(41):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-3*t\n    pts.append((xc+u,yc-w/2,z))\nfor k in range(40,-1,-1):\n    u=-span/2+span*k/40\n    z=ez-44.45+(44.45-17.069)*(2*u/full)**2-4*t\n    pts.append((xc+u,yc-w/2,z))\nshape=polyprism(pts,(0,w,0))\n\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: SU-LEAF--1-0-3\")",
-        "bindings": {
-          "ez": "EYE_Z"
-        }
+        "representation": "assembly_container"
       },
       "properties": {
         "color": [
@@ -4576,60 +4617,12 @@
         ],
         "material": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
         "part_number": "SU-LEAF--1-0-3",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "detalle_de_desarrollo",
+        "status": "superseded_documentary_node"
       },
       "engineering": {
-        "summary": "Hoja graduada3 del paquete de elástico. Aportar rigidez progresiva por flexión y contacto entre hojas; no soldar ni perforar.",
-        "notes": [
-          {
-            "title": "function",
-            "body": "Aportar rigidez progresiva por flexión y contacto entre hojas; no soldar ni perforar.",
-            "author": "Codex",
-            "date": "2026-10-24"
-          },
-          {
-            "title": "material",
-            "body": "Acero para resortes y tratamiento térmico según fabricante; noS235 ni caño estructural.",
-            "author": "Codex",
-            "date": "2026-10-24"
-          },
-          {
-            "title": "design_basis",
-            "body": "Paquete de referencia072-022-00:1250 lb=566.99 kg por resorte. Ancho44.45 mm, altura de paquete23.876 y flecha cargada44.45. La división visual en4 hojas y sus longitudes son aproximaciones, sin atribuir capacidad a hojas individuales.",
-            "author": "Codex",
-            "date": "2026-10-24"
-          },
-          {
-            "title": "manufacturing",
-            "body": "Comprar paquete completo certificado y pareado por carga. No fabricar resorte a partir de la parábolaCAD.",
-            "author": "Codex",
-            "date": "2026-10-24"
-          },
-          {
-            "title": "assembly",
-            "body": "Centro de eje a330.2 mm de ojo nominal; eje debajo del paquete, perno central enganchado en asiento. Ojos interiores unidos a balancín con gemelas orientadas hacia arriba.",
-            "author": "Codex",
-            "date": "2026-10-24"
-          },
-          {
-            "title": "verification",
-            "body": "Curva carga-flecha y longitud real entre ojos a900kg/eje deben confirmar posición estática. La flecha de catálogo es a carga nominal, no necesariamente la de operación.",
-            "author": "Codex",
-            "date": "2026-10-24"
-          },
-          {
-            "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
-            "author": "Codex",
-            "date": "2026-10-24"
-          },
-          {
-            "title": "provenance",
-            "body": "DEX-CAT; representación de montaje deformada nominal, no forma libre ni FEM de resorte.",
-            "author": "Codex",
-            "date": "2026-10-24"
-          }
-        ]
+        "summary": "Nodo documental sin sólido:072-022-00 tiene3 hojas según catálogo Dexter2024, p14. Conserva trazabilidad del antecedente R2.",
+        "notes": []
       }
     },
     {
@@ -5227,13 +5220,15 @@
     {
       "id": "SU-CENTERBOLT--1-0",
       "parent_id": "SUSP",
-      "description": "Perno central del paquete de elástico",
+      "description": "Perno central y tuerca alojados sin interferencia · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nshape=cyl(4.5,40,(2220.9,-962.5,params[\"ez\"]-44.45-30)).fuse(hexsolid(7,7,(2220.9,-962.5,params[\"ez\"]-44.45-30)))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: SU-CENTERBOLT--1-0\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nbottom=top-stack\nbolt=cyl(6,5.5,xc,yc,bottom-5.5).fuse(cyl(4,stack+10,xc,yc,bottom)).removeSplitter()\nnut=hexagon(13,6.5,top).cut(cyl(4.1,7,xc,yc,top-.25))\nshape=Part.makeCompound([bolt,nut])\nassert len(bolt.Solids)==1\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -5243,58 +5238,71 @@
         ],
         "material": "Perno de resorteOEM, diámetro9 de representación.",
         "part_number": "SU-CENTERBOLT--1-0",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Perno central del paquete de elástico. Localizar hojas entre sí y tetón en asiento de eje; no sustituye abrazaderasU.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Localizar hojas entre sí y tetón en asiento de eje; no sustituye abrazaderasU.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Perno de resorteOEM, diámetro9 de representación.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Geometría de proyecto; no plano de fabricante",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Cabeza encastrada sin falso apoyo; alineación del taladro de asiento define posición del eje.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Verificar que el perno no haga tope antes de apoyar paquete y asiento.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9227,13 +9235,15 @@
     {
       "id": "RU-SEAT-0--1",
       "parent_id": "RUN",
-      "description": "Asiento de elástico para tuboØ60.325",
+      "description": "Asiento de ballesta con alojamiento de cabeza · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nz=params[\"z\"]\nshape=box(90,50,18,(2175.9,-987.5,z+30.1625-8)).cut(cyl(30.1625,60,(2220.9,-992.5,z),(0,1,0))).cut(cyl(5,25,(2220.9,-962.5,z+20)))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-SEAT-0--1\")",
         "bindings": {
+          "x": "XF",
+          "ez": "EYE_Z",
           "z": "AXLE_Z"
-        }
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nbottom=top-stack\nshape=Part.makeBox(90,50,18,V(xc-45,yc-25,az+22.1625)).cut(cyl(30.1625,60,xc,yc-30,az,(0,1,0)))\nshape=shape.cut(cyl(4.25,30,xc,yc,az+15)).cut(cyl(6.25,6,xc,yc,bottom-6))\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9243,58 +9253,71 @@
         ],
         "material": "Acero de asientoOEM; representación90×50 y10 mm de altura útil sobre tubo.",
         "part_number": "RU-SEAT-0--1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Asiento de elástico para tuboØ60.325. Apoyo plano del paquete y localización del perno central sobre eje redondo.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Apoyo plano del paquete y localización del perno central sobre eje redondo.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Acero de asientoOEM; representación90×50 y10 mm de altura útil sobre tubo.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Geometría de proyecto; no plano de fabricante",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Asiento suministrado/soldado por fabricante de eje con procedimiento y posición definidos.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Contacto completo asiento-resorte, perno central encastrado. No centrar eje mediante fricción de abrazaderas solamente.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Comprobar altura y radio reales de asiento; carga de aplastamiento y transferencia por soldadura.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9302,13 +9325,15 @@
     {
       "id": "RU-TIEPLATE-0--1",
       "parent_id": "SUSP",
-      "description": "Placa superior de abrazaderas de elástico110×100×10",
+      "description": "Placa de apriete con acceso al perno central · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nz=params[\"ez\"]-44.45\nshape=box(110,100,10,(2165.9,-1012.5,z))\nfor xx in [-36.1625,36.1625]:\n    for yy in [-32.225,32.225]:shape=shape.cut(cyl(6.75,12,(2220.9+xx,-962.5+yy,z-1)))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-TIEPLATE-0--1\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nshape=Part.makeBox(110,100,10,V(xc-55,yc-50,top))\nfor xx in [-36.5125,36.5125]:\n for yy in [-32.225,32.225]:shape=shape.cut(cyl(7.25,12,xc+xx,yc+yy,top-1))\nshape=shape.cut(cyl(11,12,xc,yc,top-1))\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9318,58 +9343,71 @@
         ],
         "material": "Placa de suspensión comercial e10 o espesor validado por proveedor.",
         "part_number": "RU-TIEPLATE-0--1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Placa superior de abrazaderas de elástico110×100×10. Distribuir pretensión de cuatro patas de abrazaderas sobre paquete sin aplastar hojas.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Distribuir pretensión de cuatro patas de abrazaderas sobre paquete sin aplastar hojas.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Placa de suspensión comercial e10 o espesor validado por proveedor.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Patrón72.325×64.45; agujeros13.5 para abrazadera1/2 in. Dimensiones propias que deben coincidir con kit.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Montaje por encima del paquete; orden cruzado de apriete. Confirmar ausencia de apoyo en perno central.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Flexión de placa, pretensión, estabilidad del paquete y reapriete según fabricante.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9377,14 +9415,15 @@
     {
       "id": "RU-UBOLT-0--1-0",
       "parent_id": "SUSP",
-      "description": "AbrazaderaU comercial1/2 in para eje2⅜ in",
+      "description": "Abrazadera continua de desarrollo Ø12,7 · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nx=2220.9;y=-994.725;z=params[\"z\"];r=36.1625;parts=[]\npts=[(x+r*math.cos(math.pi+k*math.pi/12),y,z+r*math.sin(math.pi+k*math.pi/12)) for k in range(13)]\nfor a,b in zip(pts[:-1],pts[1:]):parts.append(rod(a,b,6.35))\nfor xx in [x-r,x+r]:parts.append(cyl(6.35,params[\"ez\"]-44.45+34-z,(xx,y,z)))\nshape=compound(parts)\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-UBOLT-0--1-0\")",
         "bindings": {
-          "z": "AXLE_Z",
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\ny=-994.725;r=36.5125;rod=6.35\narc=Part.makeTorus(r,rod,V(xc,y,az),V(0,1,0)).common(Part.makeBox(100,30,60,V(xc-50,y-15,az-60)))\nshape=arc\nfor xx in [xc-r,xc+r]:shape=shape.fuse(cyl(rod,top+34-az,xx,y,az))\nshape=shape.removeSplitter()\nassert len(shape.Solids)==1,'Abrazadera desconectada'\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9394,58 +9433,71 @@
         ],
         "material": "Abrazadera comercial1/2 in con grado, radio y rosca según proveedor. Curva modelada por segmentos.",
         "part_number": "RU-UBOLT-0--1-0",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "AbrazaderaU comercial1/2 in para eje2⅜ in. Sujetar eje y paquete por pretensión, resistir frenada y evitar desplazamiento. No usar varilla roscada doblada en taller.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Sujetar eje y paquete por pretensión, resistir frenada y evitar desplazamiento. No usar varilla roscada doblada en taller.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Abrazadera comercial1/2 in con grado, radio y rosca según proveedor. Curva modelada por segmentos.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Luz interior60.325 mm, dosU por resorte, ochoU total. Pretensión y par no asignados sin kit/recubrimiento real.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Apriete cruzado incremental con dinamométrica; reajuste por asentamiento según manual. Rosca representada lisa, no plano de fabricación.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Comprobar que no cierre la luz deformando tubo, longitud de rosca y contacto del arco.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9453,13 +9505,15 @@
     {
       "id": "RU-UNUT-0--1-0--1",
       "parent_id": "SUSP",
-      "description": "Tuerca y arandela de abrazadera1/2",
+      "description": "Tuerca y arandela de abrazadera · rosca simplificada · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nz=params[\"ez\"]-44.45+10\nshape=ring(13,6.75,2,(2184.7375,-994.725,z),(0,0,1)).fuse(hexsolid(11.5,12,(2184.7375,-994.725,z+2)).cut(cyl(6,14,(2184.7375,-994.725,z+1))))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-UNUT-0--1-0--1\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nx=xc+-1*36.5125;y=-994.725\nwasher=cyl(13,2,x,y,top+10).cut(cyl(6.75,2,x,y,top+10))\nnut=hexagon(19,12,top+12,x,y).cut(cyl(6.5,12,x,y,top+12))\nshape=washer.fuse(nut).removeSplitter()\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9469,58 +9523,71 @@
         ],
         "material": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
         "part_number": "RU-UNUT-0--1-0--1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Tuerca y arandela de abrazadera1/2. Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Geometría de proyecto; no plano de fabricante",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Par obligatorio del fabricante deU, no del tamaño nominal aislado. Registrar par y lote en montaje.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Revisar asiento plano, rosca útil, pérdida de precarga y desplazamiento de marcas testigo.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9528,13 +9595,15 @@
     {
       "id": "RU-UNUT-0--1-0-1",
       "parent_id": "SUSP",
-      "description": "Tuerca y arandela de abrazadera1/2",
+      "description": "Tuerca y arandela de abrazadera · rosca simplificada · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nz=params[\"ez\"]-44.45+10\nshape=ring(13,6.75,2,(2257.0625,-994.725,z),(0,0,1)).fuse(hexsolid(11.5,12,(2257.0625,-994.725,z+2)).cut(cyl(6,14,(2257.0625,-994.725,z+1))))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-UNUT-0--1-0-1\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nx=xc+1*36.5125;y=-994.725\nwasher=cyl(13,2,x,y,top+10).cut(cyl(6.75,2,x,y,top+10))\nnut=hexagon(19,12,top+12,x,y).cut(cyl(6.5,12,x,y,top+12))\nshape=washer.fuse(nut).removeSplitter()\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9544,58 +9613,71 @@
         ],
         "material": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
         "part_number": "RU-UNUT-0--1-0-1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Tuerca y arandela de abrazadera1/2. Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Geometría de proyecto; no plano de fabricante",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Par obligatorio del fabricante deU, no del tamaño nominal aislado. Registrar par y lote en montaje.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Revisar asiento plano, rosca útil, pérdida de precarga y desplazamiento de marcas testigo.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9603,14 +9685,15 @@
     {
       "id": "RU-UBOLT-0--1-1",
       "parent_id": "SUSP",
-      "description": "AbrazaderaU comercial1/2 in para eje2⅜ in",
+      "description": "Abrazadera continua de desarrollo Ø12,7 · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nx=2220.9;y=-930.275;z=params[\"z\"];r=36.1625;parts=[]\npts=[(x+r*math.cos(math.pi+k*math.pi/12),y,z+r*math.sin(math.pi+k*math.pi/12)) for k in range(13)]\nfor a,b in zip(pts[:-1],pts[1:]):parts.append(rod(a,b,6.35))\nfor xx in [x-r,x+r]:parts.append(cyl(6.35,params[\"ez\"]-44.45+34-z,(xx,y,z)))\nshape=compound(parts)\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-UBOLT-0--1-1\")",
         "bindings": {
-          "z": "AXLE_Z",
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\ny=-930.275;r=36.5125;rod=6.35\narc=Part.makeTorus(r,rod,V(xc,y,az),V(0,1,0)).common(Part.makeBox(100,30,60,V(xc-50,y-15,az-60)))\nshape=arc\nfor xx in [xc-r,xc+r]:shape=shape.fuse(cyl(rod,top+34-az,xx,y,az))\nshape=shape.removeSplitter()\nassert len(shape.Solids)==1,'Abrazadera desconectada'\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9620,58 +9703,71 @@
         ],
         "material": "Abrazadera comercial1/2 in con grado, radio y rosca según proveedor. Curva modelada por segmentos.",
         "part_number": "RU-UBOLT-0--1-1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "AbrazaderaU comercial1/2 in para eje2⅜ in. Sujetar eje y paquete por pretensión, resistir frenada y evitar desplazamiento. No usar varilla roscada doblada en taller.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Sujetar eje y paquete por pretensión, resistir frenada y evitar desplazamiento. No usar varilla roscada doblada en taller.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Abrazadera comercial1/2 in con grado, radio y rosca según proveedor. Curva modelada por segmentos.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Luz interior60.325 mm, dosU por resorte, ochoU total. Pretensión y par no asignados sin kit/recubrimiento real.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Apriete cruzado incremental con dinamométrica; reajuste por asentamiento según manual. Rosca representada lisa, no plano de fabricación.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Comprobar que no cierre la luz deformando tubo, longitud de rosca y contacto del arco.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9679,13 +9775,15 @@
     {
       "id": "RU-UNUT-0--1-1--1",
       "parent_id": "SUSP",
-      "description": "Tuerca y arandela de abrazadera1/2",
+      "description": "Tuerca y arandela de abrazadera · rosca simplificada · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nz=params[\"ez\"]-44.45+10\nshape=ring(13,6.75,2,(2184.7375,-930.275,z),(0,0,1)).fuse(hexsolid(11.5,12,(2184.7375,-930.275,z+2)).cut(cyl(6,14,(2184.7375,-930.275,z+1))))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-UNUT-0--1-1--1\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nx=xc+-1*36.5125;y=-930.275\nwasher=cyl(13,2,x,y,top+10).cut(cyl(6.75,2,x,y,top+10))\nnut=hexagon(19,12,top+12,x,y).cut(cyl(6.5,12,x,y,top+12))\nshape=washer.fuse(nut).removeSplitter()\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9695,58 +9793,71 @@
         ],
         "material": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
         "part_number": "RU-UNUT-0--1-1--1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Tuerca y arandela de abrazadera1/2. Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Geometría de proyecto; no plano de fabricante",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Par obligatorio del fabricante deU, no del tamaño nominal aislado. Registrar par y lote en montaje.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Revisar asiento plano, rosca útil, pérdida de precarga y desplazamiento de marcas testigo.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -9754,13 +9865,15 @@
     {
       "id": "RU-UNUT-0--1-1-1",
       "parent_id": "SUSP",
-      "description": "Tuerca y arandela de abrazadera1/2",
+      "description": "Tuerca y arandela de abrazadera · rosca simplificada · S02-A",
       "recipe": {
         "representation": "freecad_python",
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\nz=params[\"ez\"]-44.45+10\nshape=ring(13,6.75,2,(2257.0625,-930.275,z),(0,0,1)).fuse(hexsolid(11.5,12,(2257.0625,-930.275,z+2)).cut(cyl(6,14,(2257.0625,-930.275,z+1))))\nif shape.isNull() or not shape.isValid():\n    raise ValueError(\"Geometria invalida: RU-UNUT-0--1-1-1\")",
         "bindings": {
-          "ez": "EYE_Z"
-        }
+          "x": "XF",
+          "ez": "EYE_Z",
+          "z": "AXLE_Z"
+        },
+        "script": "import math\nV=App.Vector\nxc=params['x'];yc=-962.5;ez=params['ez'];az=params['z'];top=ez-44.45;stack=23.876;t=stack/3;w=44.45\ndef cyl(r,h,x,y,z,axis=(0,0,1)):return Part.makeCylinder(r,h,V(x,y,z),V(*axis))\ndef prism(pts,vec):\n v=[V(*p) for p in pts];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef hexagon(af,h,z,x=xc,y=yc):\n r=af/math.sqrt(3);return prism([(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)],(0,0,h))\ndef profile(u):return top+(44.45-11.1)*(max(0,abs(u)-60)/(330.2-60))**2\n\nx=xc+1*36.5125;y=-930.275\nwasher=cyl(13,2,x,y,top+10).cut(cyl(6.75,2,x,y,top+10))\nnut=hexagon(19,12,top+12,x,y).cut(cyl(6.5,12,x,y,top+12))\nshape=washer.fuse(nut).removeSplitter()\n\nassert shape.isValid() and not shape.isNull()\n"
       },
       "properties": {
         "color": [
@@ -9770,58 +9883,71 @@
         ],
         "material": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
         "part_number": "RU-UNUT-0--1-1-1",
-        "geometry_status": "detalle_de_desarrollo"
+        "geometry_status": "revision_nominal_union_central_DI",
+        "revision_detail": "S02-A"
       },
       "engineering": {
-        "summary": "Tuerca y arandela de abrazadera1/2. Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+        "summary": "Revisión S02-A: unión central de la ballesta delantera izquierda; geometría de integración, pendiente especificación OEM y verificación resistente.",
         "notes": [
           {
             "title": "function",
-            "body": "Mantener pretensión de abrazaderaU; conjunto tuerca-arandela de catálogo, sin función articulada.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Tuerca de clase y paso correspondientes alU; no mezclar roscas1/2UNF/UNC.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Geometría de proyecto; no plano de fabricante",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Componente de compra; no fabricar a partir de la representación",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Par obligatorio del fabricante deU, no del tamaño nominal aislado. Registrar par y lote en montaje.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Revisar asiento plano, rosca útil, pérdida de precarga y desplazamiento de marcas testigo.",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Inspección periódica y tras rodaje según manual final",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Dimensiones de desarrollo propias",
+            "body": "Antecedente sustituido en esta pieza por S02-A. Consultar decisión S02-A-D01 y notas específicas de esta revisión.",
             "author": "Codex",
             "date": "2026-10-24"
+          },
+          {
+            "title": "S02-A · base dimensional",
+            "body": "Dexter 072-022-00:3 hojas, ancho44.45 mm, paquete23.876 mm, longitud26 pulgadas y altura cargada44.45 mm. Espesores iguales7.9587, perfiles y longitudes de hojas secundarias son envolventes de desarrollo, no plano OEM."
+          },
+          {
+            "title": "S02-A · montaje central",
+            "body": "Tramo central plano120 mm. Agujero de hojasØ8.5; perno ilustrativoØ8, cabezaØ12/e5.5 alojada en asientoØ12.5/profundidad6; tuerca AF13/e6.5 accesible en placaØ22. Abrazadera propiaØ12.7 con radio de eje36.5125 y agujeros de placaØ14.5. No identificar este apriete como kit Dexter aprobado: el catálogo muestra7/16-20 para tubo2.38. Confirmar conjunto completo con proveedor."
+          },
+          {
+            "title": "S02-A · límites",
+            "body": "No se ha dimensionado la rigidez de hojas, precarga, resistencia de abrazaderas/perno/placa, fatiga ni soldadura. No fabricar ballestas ni sustituir un kit de suspensión a partir de esta envolvente. Bujes y articulaciones, otras tres ballestas y cinemática se revisan después."
           }
         ]
       }
@@ -31254,6 +31380,71 @@
         "ROOT"
       ],
       "kind": "audit_plan"
+    },
+    {
+      "id": "S02A-SRC-DEXTER",
+      "kind": "source",
+      "title": "Dexter · catálogo de repuestos RV2024, p14",
+      "source_url": "https://static.nhtsa.gov/odi/tsbs/2024/MC-11002352-0001.pdf",
+      "body": "Tabla de ballestas:072-022-00,3 hojas, bujes nylon,26in, paquete0.94in, ancho1.75in y altura cargada1.75in. Tabla de kits:para tubo2.38in se publica7/16-20; no atribuir aprobación OEM al apriete propioØ12.7 del anteproyecto. Fuente primaria Dexter publicada en NHTSA; página14 leída y renderizada.",
+      "item_ids": [
+        "SU-LEAF--1-0-0",
+        "SU-LEAF--1-0-1",
+        "SU-LEAF--1-0-2",
+        "RU-TIEPLATE-0--1",
+        "RU-SEAT-0--1",
+        "SU-CENTERBOLT--1-0",
+        "RU-UBOLT-0--1-0",
+        "RU-UNUT-0--1-0--1",
+        "RU-UNUT-0--1-0-1",
+        "RU-UBOLT-0--1-1",
+        "RU-UNUT-0--1-1--1",
+        "RU-UNUT-0--1-1-1",
+        "SU-LEAF--1-0-3"
+      ]
+    },
+    {
+      "id": "S02-A-D01",
+      "kind": "design_decision",
+      "title": "S02-A · unión central delantera izquierda · revisión parcial",
+      "body": "Se corrige solo este paquete:3 hojas con curvas suaves y zona central plana120mm, hoja maestra y ojos en un cuerpo continuo, agujerosØ8.5, perno y tuerca con alojamiento en asiento y placa, abrazaderas continuas y herrajes alineados. Geometría de desarrollo, no plano OEM. La cuarta hoja R2 pasa a nodo documental sin sólido. Los otros tres paquetes conservan R2 y siguen pendientes. No hay solapes internos en12 elementos físicos; quedan10 interferencias contra cableado, cable de estacionamiento y plato de freno. Esta etapa NO aprueba suspensión ni circulación. Se preserva contacto de ménsula S01 con placa y holgura10.275mm a hoja. Continuar por articulaciones y resolver interfaces de freno/cables antes de cerrar S02.",
+      "item_ids": [
+        "SU-LEAF--1-0-0",
+        "SU-LEAF--1-0-1",
+        "SU-LEAF--1-0-2",
+        "RU-TIEPLATE-0--1",
+        "RU-SEAT-0--1",
+        "SU-CENTERBOLT--1-0",
+        "RU-UBOLT-0--1-0",
+        "RU-UNUT-0--1-0--1",
+        "RU-UNUT-0--1-0-1",
+        "RU-UBOLT-0--1-1",
+        "RU-UNUT-0--1-1--1",
+        "RU-UNUT-0--1-1-1",
+        "SU-LEAF--1-0-3"
+      ]
+    },
+    {
+      "id": "S02A-EVIDENCIA",
+      "kind": "computed_evidence",
+      "title": "S02-A · auditoría de unión central e interferencias abiertas",
+      "source_url": "https://felipe-klz.github.io/cr200-explorador/downloads/auditoria-s02a.json",
+      "body": "BREP FreeCAD/OCCT, umbral0.001mm³. Hoja maestra y ambas abrazaderas:un cuerpo cada una. Sin solapes internos. Contactos entre hojas, placa/hoja y asiento/hoja comprobados por unión booleana. Diez solapes externos registrados individualmente; no se ocultan ni se consideran aceptables. No se evaluaron precarga, rigidez, fatiga, tensiones, tolerancias OEM ni cinemática. El CAD representa posición nominal cargada, no forma libre de fabricación.",
+      "item_ids": [
+        "SU-LEAF--1-0-0",
+        "SU-LEAF--1-0-1",
+        "SU-LEAF--1-0-2",
+        "RU-TIEPLATE-0--1",
+        "RU-SEAT-0--1",
+        "SU-CENTERBOLT--1-0",
+        "RU-UBOLT-0--1-0",
+        "RU-UNUT-0--1-0--1",
+        "RU-UNUT-0--1-0-1",
+        "RU-UBOLT-0--1-1",
+        "RU-UNUT-0--1-1--1",
+        "RU-UNUT-0--1-1-1",
+        "SU-LEAF--1-0-3"
+      ]
     }
   ],
   "choices": [],
@@ -33561,6 +33752,102 @@
       "source": "note:S01-D01",
       "target": "note:AUDIT-PLAN",
       "kind": "part_of_audit"
+    },
+    {
+      "id": "S02A-REL-0",
+      "source": "note:S02A-SRC-DEXTER",
+      "target": "note:S02-A-D01",
+      "kind": "supports"
+    },
+    {
+      "id": "S02A-REL-1",
+      "source": "note:S02A-EVIDENCIA",
+      "target": "note:S02-A-D01",
+      "kind": "supports"
+    },
+    {
+      "id": "S02A-REL-2",
+      "source": "note:S02-A-D01",
+      "target": "note:AUDIT-PLAN",
+      "kind": "part_of_audit"
+    },
+    {
+      "id": "S02A-REL-3",
+      "source": "note:S02-A-D01",
+      "target": "part:SU-LEAF--1-0-0",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-4",
+      "source": "note:S02-A-D01",
+      "target": "part:SU-LEAF--1-0-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-5",
+      "source": "note:S02-A-D01",
+      "target": "part:SU-LEAF--1-0-2",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-6",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-TIEPLATE-0--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-7",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-SEAT-0--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-8",
+      "source": "note:S02-A-D01",
+      "target": "part:SU-CENTERBOLT--1-0",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-9",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-UBOLT-0--1-0",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-10",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-UNUT-0--1-0--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-11",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-UNUT-0--1-0-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-12",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-UBOLT-0--1-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-13",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-UNUT-0--1-1--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-14",
+      "source": "note:S02-A-D01",
+      "target": "part:RU-UNUT-0--1-1-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S02A-REL-15",
+      "source": "note:S02-A-D01",
+      "target": "part:SU-LEAF--1-0-3",
+      "kind": "justifies"
     }
   ]
 }

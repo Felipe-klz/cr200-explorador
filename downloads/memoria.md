@@ -1,68 +1,35 @@
-# CR200 · Auditoría por subensambles
+# CR200 · S02-A: unión central de ballesta delantera izquierda
 
-## S01 · Amortiguación
+Estado: revisión geométrica parcial. La suspensión completa sigue abierta.
 
-Se revisó primero el montaje delantero izquierdo y después, por separado, los otros tres. Se corrigieron16 elementos del CAD:cuatro amortiguadores, ocho ménsulas y cuatro conjuntos de herrajes. El resto del trailer no se declara revisado por este control.
+Se trabajó una sola subsección: paquete, asiento sobre eje, placa, perno central, dos abrazaderas y cuatro tuercas/arandelas del montaje delantero izquierdo. Son12 elementos físicos y un nodo histórico sin sólido. Los otros tres paquetes conservan la geometría R2 y todavía no fueron revisados.
 
-### Errores encontrados en R2
+## Investigación y corrección
 
-|Control delantero izquierdo|R2|Corrección S01|
-|---|---:|---|
-|Amortiguador/tubo de eje|6818.55 mm³ de intersección|0 mm³ en posición nominal|
-|Herrajes/ménsula superior|794.61 mm³|0 mm³ en posición nominal|
-|Herrajes/ménsula inferior|73.24 mm³|0 mm³ en posición nominal|
-|Ménsula inferior/eje|290.88 mm³|0 mm³ en posición nominal|
-|Ménsula inferior tras unión booleana|3 cuerpos separados|1 cuerpo continuo|
-|Tuercas representadas|4, incluidas tuercas interiores incorrectas|2 exteriores; hombros retienen arandelas interiores|
+Dexter, catálogo RV2024, página14:072-022-00 tiene3 hojas, bujes de nylon, longitud26in, ancho1.75in, paquete0.94in y altura cargada1.75in. Fuente primaria: https://static.nhtsa.gov/odi/tsbs/2024/MC-11002352-0001.pdf
 
-### Solución corregida
+El modelo anterior tenía4 hojas. La cuarta pasa a antecedente documental; no se borra su trazabilidad. Hoja maestra con ojos unidos en un solo sólido; curvas cuadráticas suaves en lugar de tramos rectos. Las tres hojas tienen un tramo plano de120mm que apoya sobre asiento y placa. Espesores iguales7.9587mm y perfiles son geometría de integración supuesta, no dimensiones OEM confirmadas ni plano para fabricar ballestas.
 
-El anclaje inferior se desplazó60 mm hacia delante del eje delantero y hacia atrás del trasero, y49 mm por debajo del eje. Queda dentro de los largueros, en y±845 mm. El punto superior queda160 mm más hacia el exterior longitudinal y200 mm más alto. Las piezas se verificaron en cada posición, incluyendo sus vecinos reales.
+Perno central ilustrativoØ8mm, agujerosØ8.5mm, cabezaØ12×5.5mm alojada en asientoØ12.5/profundidad6mm; tuercaAF13×6.5mm accesible por aberturaØ22mm en placa. Estos detalles resuelven los solapes del dibujo anterior. Roscas simplificadas con huecos de representación, sin verificación de precarga.
 
-El cuerpo del amortiguador tiene un alojamiento para el vástago; ambos se representan como dos cuerpos telescópicos sin solape de material. Cada montaje lleva dos gomas apoyadas en la placa y centradas por labios, dos arandelas y una tuerca exterior. Las dimensiones de esas interfaces siguen pendientes de plano del producto elegido.
+Dos abrazaderas continuasØ12.7mm con radio central36.5125mm para tuboØ60.325mm. Placa110×100×10mm, agujerosØ14.5mm. Herrajes alineados a las ramas. Este conjunto es un desarrollo propio: el catálogo Dexter publica7/16-20 para tubo2.38in. No atribuir compatibilidad OEM al montaje propio. Confirmar un kit completo y redimensionar antes de fabricar.
 
-La ménsula superior tiene base100 ×175 ×6, dos nervios e6 y asiento anularØ56/e6. La inferior tiene almae8 y asientoØ56/e6, fuera del paquete de hojas. Los despejesØ40 alrededor de los montajes evitan choques con gomas y arandelas. No se suelda al tubo de eje ni al amortiguador. Las ménsulas y sus uniones requieren cálculo y WPS.
+## Comprobaciones nominales
 
-### Resultados nominales
+- Cero solapes internos superiores a0.001mm³ entre los12 elementos físicos.
+- Hoja maestra y cada abrazadera:un sólido BREP válido.
+- Perno/tuerca:dos cuerpos físicos distintos, intencionales.
+- Contactos placa/hoja, hojas entre sí y asiento/hoja:unión booleana continua. No representa soldadura entre hojas.
+- Interfaz S01 conservada:contacto ménsula/placa y holgura nominal10.275mm a hoja.
 
-Los cuatro montajes no presentan solapes con sus vecinos del CAD ni entre los cuatro ítems de cada montaje. Cada ménsula forma un cuerpo continuo; las uniones geométricas con placa de reparto y placa de apriete resultan continuas. Esto acredita contacto y continuidad del dibujo, no la resistencia de una soldadura.
+## Diez interferencias externas abiertas
 
-|Holgura geométrica|Resultado nominal mínimo|
-|---|---:|
-|Amortiguador a tubo de eje|29.964 mm|
-|Ménsula inferior a tubo de eje|19.300 mm|
-|Ménsula inferior a hoja maestra|10.275 mm|
+El barrido contra vecinos encontró cruces con EL-HARNESS, EL-PARKCABLE y RU-BACKPLATE-0--1. El detalle de cada par y volumen está en el JSON adjunto. No son interferencias aceptadas ni corregidas: quedan como problemas de integración al revisar rutas eléctricas, estacionamiento y freno. No se puede cerrar S02 ni fabricar el conjunto con estos cruces.
 
-La holgura a hoja debe contrastarse con juego lateral, tolerancias, torsión y deformación reales. No se afirma que el valor nominal garantice espacio en servicio.
+## Próxima subsección y límites
 
-### Movimiento y montaje
+Continuar por ojos, bujes, pernos, gemelas y balancín de este mismo montaje; después revisar los otros paquetes individualmente. Resolver interfaces con frenos y cables antes de cerrar la suspensión.
 
-En el delantero izquierdo se ensayaron cinco traslaciones verticales aisladas:-50,-25,0,+35,+70 mm. El amortiguador mantiene distancias al eje de26.82 mm o mayores en esas posiciones. Longitudes de206.155 a296.816 mm frente a190.5–304.8 mm de la referencia dimensional de catálogo. No usar esos extremos de catálogo como topes de suspensión.
+No se realizó cálculo resistente, rigidez de ballestas, precarga, fatiga, tolerancias OEM, cinemática articulada ni ensayo. El dibujo corresponde a una posición nominal cargada, no a la forma libre. No hay homologación ni aprobación para circular.
 
-La inclinación varía aproximadamente-6.04°/+12.25° respecto del montaje nominal. Se comprobó ausencia de choque de espárragos con soportes en los extremos y posición nominal; falta confirmar que las gomas y el producto admitan esa articulación. La deformación de gomas no se simuló.
-
-Una envolvente representativa de llave cortaR20 y17 mm junto a cada tuerca del delantero izquierdo queda libre. No se comprobó una herramienta comercial ni un vaso largo.
-
-### Qué queda abierto
-
-- Plano y características OEM del amortiguador y herrajes:medición de longitudes, espárragos, precarga de goma, retención y capacidad angular.
-- Cinemática real del tándem, incluidos desplazamientos longitudinales y giro de ejes y balancín. Corresponde a S02.
-- Fuerzas de amortiguación, dimensionado de placa de apriete, ménsulas, soldaduras y fatiga.
-- Fabricación, ensayos físicos y homologación del vehículo completo.
-
-**Estado:S01 corregido y revisado geométricamente dentro del alcance indicado. No liberado para fabricar.**
-
-### Secuencia de revisión
-
-1. S01 · Amortiguación:geometría nominal revisada; validación funcional y resistente pendiente.
-2. S02 · Suspensión tándem:pendiente.
-3. Nudos de suspensión a bastidor:pendiente.
-4. Lanza:pendiente.
-5. Enganche,cadenas,ruptura y jockey:pendiente.
-6. Bastidor y anclajes de vivienda:pendiente.
-7. Ejes,mazas,llantas y neumáticos:pendiente.
-8. Frenos eléctricos y estacionamiento:pendiente.
-9. Instalación eléctrica:pendiente.
-10. Guardabarros,luces,paragolpes y estabilizadores:pendiente.
-
-La fuente paramétrica y el informeJSON permiten inspeccionar el alcance y las mediciones. El catálogo Lippert283271 aporta sólo una referencia dimensional; nuestro montaje no se presenta como kitOEM281255 ni como producto homologado.
+Revisión Nav IA:62bc86d839804d46b187ff3c0e3a18a2. Build:0714a2bb9f40493d8f88c83b682ab7d9.
