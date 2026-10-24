@@ -21620,15 +21620,18 @@
     {
       "id": "SU-DAMPER-0--1",
       "parent_id": "SUSP",
-      "description": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+      "description": "Amortiguador de referencia dimensional283271 · reubicado S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nbody=Part.makeCylinder(22,140,a+u*24,u).cut(Part.makeCylinder(8,130,a+u*35,u))\nbottomstud=Part.makeCylinder(4.7625,37,a-u*24,u)\nshoulder=Part.makeCylinder(8,11,a+u*13,u)\nfixed=joined([body,shoulder,bottomstud])\nrod=Part.makeCylinder(7,146,b-u*159,u)\ntopstud=Part.makeCylinder(4.7625,37,b-u*13,u)\nmoving=joined([rod,topstud])\nshape=Part.makeCompound([fixed,moving])\nif fixed.common(moving).Volume>1e-6:raise ValueError('Solape cuerpo-vastago')\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,-845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nshape=compound([rod(tuple(a+u*24),tuple(a+u*164),22),rod(tuple(a+u*145),tuple(b-u*24),7),rod(tuple(a-u*24),tuple(a+u*24),4.7625),rod(tuple(b-u*24),tuple(b+u*24),4.7625)])\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -21636,59 +21639,61 @@
           0.25,
           0.12
         ],
-        "material": "Amortiguador comercial paraRV,referencia555001 con montajesS4; cuerpo y bujes visuales.",
+        "material": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
         "part_number": "SU-DAMPER-0--1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+        "summary": "Amortiguador de referencia dimensional283271 · reubicado S01",
         "notes": [
           {
             "title": "function",
-            "body": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+            "body": "Disipar energía del movimiento de la suspensión. Cuerpo hueco y vástago telescópico representados sin solape material entre ambos.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Amortiguador comercial; cuerpo y vástago representativos, no geometría OEM para fabricar.",
+            "body": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Sustituye referencia Monroe de R1. Catálogo Lippert: 7.5–12 in =190.5–304.8 mm entre referencias de montaje. Distancias nominales dx160 dz200: L256.125 mm, ángulo38.66° respecto vertical. Con +70/-50 mm de desplazamiento vertical aislado:206.155/296.816 mm. Márgenes15.655/7.984 mm. La articulación real modifica estos valores.",
+            "body": "Punto inferior60 mm por delante del eje delantero / por detrás del trasero y49 mm por debajo del eje, y±845. Superior separado160 mm longitudinales y200 mm verticales. L nominal256.125 mm;190.5–304.8 mm de referencia. Desplazamientos verticales aislados+70/-50 mm dan206.155/296.816 mm. Confirmar con proveedor referencia de medición y curva fuerza/velocidad.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Corte y mecanizado en plantilla. Desbarbar y proteger superficies; no es plano liberado.",
+            "body": "Componente de compra. CuerpoØ44, vástagoØ14 y espárragosØ9.525 son envolventes de integración, no cotas OEM de fabricación. Rosca no modelada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Montaje sobre casquillos de goma y arandelas, normales al eje. Rosca3/8 de representación: confirmar ficha exacta del283271 y métrica de longitudes OEM. No utilizar como tope de extensión o compresión.",
+            "body": "Un solo conjunto de tuerca exterior por espárrago. Arandelas interiores retenidas por hombros, cuatro gomas en total con labios en los agujeros, cuatro arandelas y dos tuercas. No usar amortiguador como tope de recorrido.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Confirmación de fuerza-velocidad, longitudes OEM y articulación de ballesta/balancín obligatoria. Márgenes nominales no garantizan carrera en cruce de ejes; incorporar limitación de extensión independiente si resulta necesaria.",
+            "body": "Auditoría nominal y cinco posiciones verticales: no choque con eje ni soportes. La variación de inclinación exige aproximadamente-6.04°/+12.25° respecto del montaje nominal. La goma debe admitirla según OEM; el dibujo rígido no prueba flexibilidad, fuerza de amortiguación, articulación real ni resistencia.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -21698,15 +21703,18 @@
     {
       "id": "SU-DAMPERLOW-0--1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada inferior con asiento perpendicular",
+      "description": "Ménsula inferior continua fuera del eje y ballesta · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,a-u*3,u)\ntop=z+74.0385\nweb=prism([(x-63,-930,top),(x-63,-912.5,top),(x-63,-840,a.z-25),(x-63,-875,a.z-35),(x-63,-930,top-30)],(8,0,0))\nclear=Part.makeCylinder(20,100,a-u*50,u)\nweb=web.cut(clear)\nshape=joined([seat,web])\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,-845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=a\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [2197.9,2237.9]:\n w=polyprism([(xx,-912.5,params['z']+64.0385),(xx,-932.5,params['z']+64.0385),(xx,-863,params['z']-27),(xx,-827,params['z']-27)],(6,0,0))\n w=w.cut(cyl(33.2,240,(2220.9,-1082.5,params['z']),(0,1,0)))\n webs.append(w)\nbase=box(58,20,6,(2191.9,-932.5,params['z']+58.0385))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -21714,13 +21722,15 @@
           0.4,
           0.42
         ],
-        "material": "S235 e6; pieza solidaria a placa de apriete rediseñada.",
+        "material": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
         "part_number": "SU-DAMPERLOW-0--1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada inferior con asiento perpendicular",
+        "summary": "Ménsula inferior continua fuera del eje y ballesta · S01",
         "notes": [
           {
             "title": "function",
@@ -21730,7 +21740,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -21748,25 +21758,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos nervios e6 con recorte de holgura de3 mm alrededor del tubo de eje; apoyo58 ×20 ×6 sólo en banda interior de placa de apriete, evitando el paquete de hojas. Cara superior del apoyo z-150.833 y base z-156.833. Placa normal al ejeØ56/e6 conØ12. Construir conjunto antes de montar U-bolts. No soldar al tubo de eje. Verificar que el recorte no comprometa resistencia y acceso.",
+            "body": "Alma contra la cara delantera de la placa de apriete en eje delantero, o trasera en eje trasero; pie en banda interior, fuera del paquete. RecorteØ40 libera gomas y arandelas. Conjunto soldado a placa de apriete antes de montar abrazaderas, sin soldar al tubo de eje. Unión y secuencia por WPS calculada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo continuo; contacto geométrico con placa de apriete y ausencia de choque con eje/hojas comprobados en posición nominal. Holgura a hoja maestra10.275 mm en delantero izquierdo. Determinar juego lateral, tolerancias y flexión real: no asumir que la holgura nominal basta. Dimensionar torsión de placa, alma, asiento y cordones antes de fabricar.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -21776,15 +21786,18 @@
     {
       "id": "SU-DAMPERUP-0--1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada superior con asiento perpendicular",
+      "description": "Ménsula superior continua con despeje de gomas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,b-u*3,u)\nbase=box(100,175,6,(b.x-50,-1000,-12))\nclear=Part.makeCylinder(20,100,b-u*50,u)\nwebs=[]\nfor xx in [b.x-22,b.x+16]:\n w=prism([(xx,-962.5,-12),(xx,-825,-12),(xx,-845,b.z-32)],(6,0,0))\n webs.append(w.cut(clear))\nshape=joined([base,seat]+webs)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,-845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=b\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [2038.9,2076.9]:\n webs.append(polyprism([(xx,-962.5,-12),(xx,-825,-12),(xx,-845,params['z']+params['dz']-35)],(6,0,0)))\nbase=box(100,175,6,(2010.9,-1000,-12))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -21792,13 +21805,15 @@
           0.4,
           0.42
         ],
-        "material": "ChapaS235e6, unión atornillada/soldada aplaca dedicada.",
+        "material": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
         "part_number": "SU-DAMPERUP-0--1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada superior con asiento perpendicular",
+        "summary": "Ménsula superior continua con despeje de gomas · S01",
         "notes": [
           {
             "title": "function",
@@ -21808,7 +21823,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -21826,25 +21841,25 @@
           },
           {
             "title": "assembly",
-            "body": "Placa anular Ø56/e6, agujeroØ12 orientado normal al amortiguador; dos nervios e6 y base100 × 175 × 6 a cara inferior del larguero. Solape de75 mm de base bajo RHS, sin cargar piso. Acceso a tuerca y longitud libre del vástago por confirmar.",
+            "body": "Basez-12 a-6 soldada bajo la placa de reparto de suspensión existente, que conecta con el larguero. Nervios y asiento siguen parámetros del amortiguador. Recorte cilíndricoØ40 alrededor del eje de montaje deja libres las gomas/arandelas. Acceso representativo con llave corta; no se verificó vaso largo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo BREP continuo y contacto geométrico con placa de reparto comprobados. Cierre de carga, espesor de base/nervios, fatiga y cordones requieren fuerza de amortiguador y análisis. No soldar la pieza de compra; el soporte se fabrica aparte.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -21854,15 +21869,18 @@
     {
       "id": "SU-DAMPER-0-1",
       "parent_id": "SUSP",
-      "description": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+      "description": "Amortiguador de referencia dimensional283271 · reubicado S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nbody=Part.makeCylinder(22,140,a+u*24,u).cut(Part.makeCylinder(8,130,a+u*35,u))\nbottomstud=Part.makeCylinder(4.7625,37,a-u*24,u)\nshoulder=Part.makeCylinder(8,11,a+u*13,u)\nfixed=joined([body,shoulder,bottomstud])\nrod=Part.makeCylinder(7,146,b-u*159,u)\ntopstud=Part.makeCylinder(4.7625,37,b-u*13,u)\nmoving=joined([rod,topstud])\nshape=Part.makeCompound([fixed,moving])\nif fixed.common(moving).Volume>1e-6:raise ValueError('Solape cuerpo-vastago')\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nshape=compound([rod(tuple(a+u*24),tuple(a+u*164),22),rod(tuple(a+u*145),tuple(b-u*24),7),rod(tuple(a-u*24),tuple(a+u*24),4.7625),rod(tuple(b-u*24),tuple(b+u*24),4.7625)])\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -21870,59 +21888,61 @@
           0.25,
           0.12
         ],
-        "material": "Amortiguador comercial paraRV,referencia555001 con montajesS4; cuerpo y bujes visuales.",
+        "material": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
         "part_number": "SU-DAMPER-0-1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+        "summary": "Amortiguador de referencia dimensional283271 · reubicado S01",
         "notes": [
           {
             "title": "function",
-            "body": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+            "body": "Disipar energía del movimiento de la suspensión. Cuerpo hueco y vástago telescópico representados sin solape material entre ambos.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Amortiguador comercial; cuerpo y vástago representativos, no geometría OEM para fabricar.",
+            "body": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Sustituye referencia Monroe de R1. Catálogo Lippert: 7.5–12 in =190.5–304.8 mm entre referencias de montaje. Distancias nominales dx160 dz200: L256.125 mm, ángulo38.66° respecto vertical. Con +70/-50 mm de desplazamiento vertical aislado:206.155/296.816 mm. Márgenes15.655/7.984 mm. La articulación real modifica estos valores.",
+            "body": "Punto inferior60 mm por delante del eje delantero / por detrás del trasero y49 mm por debajo del eje, y±845. Superior separado160 mm longitudinales y200 mm verticales. L nominal256.125 mm;190.5–304.8 mm de referencia. Desplazamientos verticales aislados+70/-50 mm dan206.155/296.816 mm. Confirmar con proveedor referencia de medición y curva fuerza/velocidad.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Corte y mecanizado en plantilla. Desbarbar y proteger superficies; no es plano liberado.",
+            "body": "Componente de compra. CuerpoØ44, vástagoØ14 y espárragosØ9.525 son envolventes de integración, no cotas OEM de fabricación. Rosca no modelada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Montaje sobre casquillos de goma y arandelas, normales al eje. Rosca3/8 de representación: confirmar ficha exacta del283271 y métrica de longitudes OEM. No utilizar como tope de extensión o compresión.",
+            "body": "Un solo conjunto de tuerca exterior por espárrago. Arandelas interiores retenidas por hombros, cuatro gomas en total con labios en los agujeros, cuatro arandelas y dos tuercas. No usar amortiguador como tope de recorrido.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Confirmación de fuerza-velocidad, longitudes OEM y articulación de ballesta/balancín obligatoria. Márgenes nominales no garantizan carrera en cruce de ejes; incorporar limitación de extensión independiente si resulta necesaria.",
+            "body": "Auditoría nominal y cinco posiciones verticales: no choque con eje ni soportes. La variación de inclinación exige aproximadamente-6.04°/+12.25° respecto del montaje nominal. La goma debe admitirla según OEM; el dibujo rígido no prueba flexibilidad, fuerza de amortiguación, articulación real ni resistencia.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -21932,15 +21952,18 @@
     {
       "id": "SU-DAMPERLOW-0-1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada inferior con asiento perpendicular",
+      "description": "Ménsula inferior continua fuera del eje y ballesta · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,a-u*3,u)\ntop=z+74.0385\nweb=prism([(x-63,-930,top),(x-63,-912.5,top),(x-63,-840,a.z-25),(x-63,-875,a.z-35),(x-63,-930,top-30)],(8,0,0))\nclear=Part.makeCylinder(20,100,a-u*50,u)\nweb=web.cut(clear)\nshape=joined([seat,web])\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=a\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [2197.9,2237.9]:\n w=polyprism([(xx,912.5,params['z']+64.0385),(xx,932.5,params['z']+64.0385),(xx,863,params['z']-27),(xx,827,params['z']-27)],(6,0,0))\n w=w.cut(cyl(33.2,240,(2220.9,842.5,params['z']),(0,1,0)))\n webs.append(w)\nbase=box(58,20,6,(2191.9,912.5,params['z']+58.0385))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -21948,13 +21971,15 @@
           0.4,
           0.42
         ],
-        "material": "S235 e6; pieza solidaria a placa de apriete rediseñada.",
+        "material": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
         "part_number": "SU-DAMPERLOW-0-1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada inferior con asiento perpendicular",
+        "summary": "Ménsula inferior continua fuera del eje y ballesta · S01",
         "notes": [
           {
             "title": "function",
@@ -21964,7 +21989,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -21982,25 +22007,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos nervios e6 con recorte de holgura de3 mm alrededor del tubo de eje; apoyo58 ×20 ×6 sólo en banda interior de placa de apriete, evitando el paquete de hojas. Cara superior del apoyo z-150.833 y base z-156.833. Placa normal al ejeØ56/e6 conØ12. Construir conjunto antes de montar U-bolts. No soldar al tubo de eje. Verificar que el recorte no comprometa resistencia y acceso.",
+            "body": "Alma contra la cara delantera de la placa de apriete en eje delantero, o trasera en eje trasero; pie en banda interior, fuera del paquete. RecorteØ40 libera gomas y arandelas. Conjunto soldado a placa de apriete antes de montar abrazaderas, sin soldar al tubo de eje. Unión y secuencia por WPS calculada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo continuo; contacto geométrico con placa de apriete y ausencia de choque con eje/hojas comprobados en posición nominal. Holgura a hoja maestra10.275 mm en delantero izquierdo. Determinar juego lateral, tolerancias y flexión real: no asumir que la holgura nominal basta. Dimensionar torsión de placa, alma, asiento y cordones antes de fabricar.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22010,15 +22035,18 @@
     {
       "id": "SU-DAMPERUP-0-1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada superior con asiento perpendicular",
+      "description": "Ménsula superior continua con despeje de gomas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,b-u*3,u)\nbase=box(100,175,6,(b.x-50,-1000,-12))\nclear=Part.makeCylinder(20,100,b-u*50,u)\nwebs=[]\nfor xx in [b.x-22,b.x+16]:\n w=prism([(xx,-962.5,-12),(xx,-825,-12),(xx,-845,b.z-32)],(6,0,0))\n webs.append(w.cut(clear))\nshape=joined([base,seat]+webs)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=b\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [2038.9,2076.9]:\n webs.append(polyprism([(xx,962.5,-12),(xx,825,-12),(xx,845,params['z']+params['dz']-35)],(6,0,0)))\nbase=box(100,175,6,(2010.9,825,-12))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22026,13 +22054,15 @@
           0.4,
           0.42
         ],
-        "material": "ChapaS235e6, unión atornillada/soldada aplaca dedicada.",
+        "material": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
         "part_number": "SU-DAMPERUP-0-1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada superior con asiento perpendicular",
+        "summary": "Ménsula superior continua con despeje de gomas · S01",
         "notes": [
           {
             "title": "function",
@@ -22042,7 +22072,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22060,25 +22090,25 @@
           },
           {
             "title": "assembly",
-            "body": "Placa anular Ø56/e6, agujeroØ12 orientado normal al amortiguador; dos nervios e6 y base100 × 175 × 6 a cara inferior del larguero. Solape de75 mm de base bajo RHS, sin cargar piso. Acceso a tuerca y longitud libre del vástago por confirmar.",
+            "body": "Basez-12 a-6 soldada bajo la placa de reparto de suspensión existente, que conecta con el larguero. Nervios y asiento siguen parámetros del amortiguador. Recorte cilíndricoØ40 alrededor del eje de montaje deja libres las gomas/arandelas. Acceso representativo con llave corta; no se verificó vaso largo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo BREP continuo y contacto geométrico con placa de reparto comprobados. Cierre de carga, espesor de base/nervios, fatiga y cordones requieren fuerza de amortiguador y análisis. No soldar la pieza de compra; el soporte se fabrica aparte.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22088,15 +22118,18 @@
     {
       "id": "SU-DAMPER-1--1",
       "parent_id": "SUSP",
-      "description": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+      "description": "Amortiguador de referencia dimensional283271 · reubicado S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nbody=Part.makeCylinder(22,140,a+u*24,u).cut(Part.makeCylinder(8,130,a+u*35,u))\nbottomstud=Part.makeCylinder(4.7625,37,a-u*24,u)\nshoulder=Part.makeCylinder(8,11,a+u*13,u)\nfixed=joined([body,shoulder,bottomstud])\nrod=Part.makeCylinder(7,146,b-u*159,u)\ntopstud=Part.makeCylinder(4.7625,37,b-u*13,u)\nmoving=joined([rod,topstud])\nshape=Part.makeCompound([fixed,moving])\nif fixed.common(moving).Volume>1e-6:raise ValueError('Solape cuerpo-vastago')\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,-845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nshape=compound([rod(tuple(a+u*24),tuple(a+u*164),22),rod(tuple(a+u*145),tuple(b-u*24),7),rod(tuple(a-u*24),tuple(a+u*24),4.7625),rod(tuple(b-u*24),tuple(b+u*24),4.7625)])\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22104,59 +22137,61 @@
           0.25,
           0.12
         ],
-        "material": "Amortiguador comercial paraRV,referencia555001 con montajesS4; cuerpo y bujes visuales.",
+        "material": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
         "part_number": "SU-DAMPER-1--1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+        "summary": "Amortiguador de referencia dimensional283271 · reubicado S01",
         "notes": [
           {
             "title": "function",
-            "body": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+            "body": "Disipar energía del movimiento de la suspensión. Cuerpo hueco y vástago telescópico representados sin solape material entre ambos.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Amortiguador comercial; cuerpo y vástago representativos, no geometría OEM para fabricar.",
+            "body": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Sustituye referencia Monroe de R1. Catálogo Lippert: 7.5–12 in =190.5–304.8 mm entre referencias de montaje. Distancias nominales dx160 dz200: L256.125 mm, ángulo38.66° respecto vertical. Con +70/-50 mm de desplazamiento vertical aislado:206.155/296.816 mm. Márgenes15.655/7.984 mm. La articulación real modifica estos valores.",
+            "body": "Punto inferior60 mm por delante del eje delantero / por detrás del trasero y49 mm por debajo del eje, y±845. Superior separado160 mm longitudinales y200 mm verticales. L nominal256.125 mm;190.5–304.8 mm de referencia. Desplazamientos verticales aislados+70/-50 mm dan206.155/296.816 mm. Confirmar con proveedor referencia de medición y curva fuerza/velocidad.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Corte y mecanizado en plantilla. Desbarbar y proteger superficies; no es plano liberado.",
+            "body": "Componente de compra. CuerpoØ44, vástagoØ14 y espárragosØ9.525 son envolventes de integración, no cotas OEM de fabricación. Rosca no modelada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Montaje sobre casquillos de goma y arandelas, normales al eje. Rosca3/8 de representación: confirmar ficha exacta del283271 y métrica de longitudes OEM. No utilizar como tope de extensión o compresión.",
+            "body": "Un solo conjunto de tuerca exterior por espárrago. Arandelas interiores retenidas por hombros, cuatro gomas en total con labios en los agujeros, cuatro arandelas y dos tuercas. No usar amortiguador como tope de recorrido.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Confirmación de fuerza-velocidad, longitudes OEM y articulación de ballesta/balancín obligatoria. Márgenes nominales no garantizan carrera en cruce de ejes; incorporar limitación de extensión independiente si resulta necesaria.",
+            "body": "Auditoría nominal y cinco posiciones verticales: no choque con eje ni soportes. La variación de inclinación exige aproximadamente-6.04°/+12.25° respecto del montaje nominal. La goma debe admitirla según OEM; el dibujo rígido no prueba flexibilidad, fuerza de amortiguación, articulación real ni resistencia.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22166,15 +22201,18 @@
     {
       "id": "SU-DAMPERLOW-1--1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada inferior con asiento perpendicular",
+      "description": "Ménsula inferior continua fuera del eje y ballesta · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,a-u*3,u)\ntop=z+74.0385\nweb=prism([(x-63,-930,top),(x-63,-912.5,top),(x-63,-840,a.z-25),(x-63,-875,a.z-35),(x-63,-930,top-30)],(8,0,0))\nclear=Part.makeCylinder(20,100,a-u*50,u)\nweb=web.cut(clear)\nshape=joined([seat,web])\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,-845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=a\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [3036.1,3076.1]:\n w=polyprism([(xx,-912.5,params['z']+64.0385),(xx,-932.5,params['z']+64.0385),(xx,-863,params['z']-27),(xx,-827,params['z']-27)],(6,0,0))\n w=w.cut(cyl(33.2,240,(3059.1,-1082.5,params['z']),(0,1,0)))\n webs.append(w)\nbase=box(58,20,6,(3030.1,-932.5,params['z']+58.0385))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22182,13 +22220,15 @@
           0.4,
           0.42
         ],
-        "material": "S235 e6; pieza solidaria a placa de apriete rediseñada.",
+        "material": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
         "part_number": "SU-DAMPERLOW-1--1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada inferior con asiento perpendicular",
+        "summary": "Ménsula inferior continua fuera del eje y ballesta · S01",
         "notes": [
           {
             "title": "function",
@@ -22198,7 +22238,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22216,25 +22256,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos nervios e6 con recorte de holgura de3 mm alrededor del tubo de eje; apoyo58 ×20 ×6 sólo en banda interior de placa de apriete, evitando el paquete de hojas. Cara superior del apoyo z-150.833 y base z-156.833. Placa normal al ejeØ56/e6 conØ12. Construir conjunto antes de montar U-bolts. No soldar al tubo de eje. Verificar que el recorte no comprometa resistencia y acceso.",
+            "body": "Alma contra la cara delantera de la placa de apriete en eje delantero, o trasera en eje trasero; pie en banda interior, fuera del paquete. RecorteØ40 libera gomas y arandelas. Conjunto soldado a placa de apriete antes de montar abrazaderas, sin soldar al tubo de eje. Unión y secuencia por WPS calculada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo continuo; contacto geométrico con placa de apriete y ausencia de choque con eje/hojas comprobados en posición nominal. Holgura a hoja maestra10.275 mm en delantero izquierdo. Determinar juego lateral, tolerancias y flexión real: no asumir que la holgura nominal basta. Dimensionar torsión de placa, alma, asiento y cordones antes de fabricar.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22244,15 +22284,18 @@
     {
       "id": "SU-DAMPERUP-1--1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada superior con asiento perpendicular",
+      "description": "Ménsula superior continua con despeje de gomas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,b-u*3,u)\nbase=box(100,175,6,(b.x-50,-1000,-12))\nclear=Part.makeCylinder(20,100,b-u*50,u)\nwebs=[]\nfor xx in [b.x-22,b.x+16]:\n w=prism([(xx,-962.5,-12),(xx,-825,-12),(xx,-845,b.z-32)],(6,0,0))\n webs.append(w.cut(clear))\nshape=joined([base,seat]+webs)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,-845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=b\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [3197.1,3235.1]:\n webs.append(polyprism([(xx,-962.5,-12),(xx,-825,-12),(xx,-845,params['z']+params['dz']-35)],(6,0,0)))\nbase=box(100,175,6,(3169.1,-1000,-12))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22260,13 +22303,15 @@
           0.4,
           0.42
         ],
-        "material": "ChapaS235e6, unión atornillada/soldada aplaca dedicada.",
+        "material": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
         "part_number": "SU-DAMPERUP-1--1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada superior con asiento perpendicular",
+        "summary": "Ménsula superior continua con despeje de gomas · S01",
         "notes": [
           {
             "title": "function",
@@ -22276,7 +22321,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22294,25 +22339,25 @@
           },
           {
             "title": "assembly",
-            "body": "Placa anular Ø56/e6, agujeroØ12 orientado normal al amortiguador; dos nervios e6 y base100 × 175 × 6 a cara inferior del larguero. Solape de75 mm de base bajo RHS, sin cargar piso. Acceso a tuerca y longitud libre del vástago por confirmar.",
+            "body": "Basez-12 a-6 soldada bajo la placa de reparto de suspensión existente, que conecta con el larguero. Nervios y asiento siguen parámetros del amortiguador. Recorte cilíndricoØ40 alrededor del eje de montaje deja libres las gomas/arandelas. Acceso representativo con llave corta; no se verificó vaso largo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo BREP continuo y contacto geométrico con placa de reparto comprobados. Cierre de carga, espesor de base/nervios, fatiga y cordones requieren fuerza de amortiguador y análisis. No soldar la pieza de compra; el soporte se fabrica aparte.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22322,15 +22367,18 @@
     {
       "id": "SU-DAMPER-1-1",
       "parent_id": "SUSP",
-      "description": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+      "description": "Amortiguador de referencia dimensional283271 · reubicado S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nbody=Part.makeCylinder(22,140,a+u*24,u).cut(Part.makeCylinder(8,130,a+u*35,u))\nbottomstud=Part.makeCylinder(4.7625,37,a-u*24,u)\nshoulder=Part.makeCylinder(8,11,a+u*13,u)\nfixed=joined([body,shoulder,bottomstud])\nrod=Part.makeCylinder(7,146,b-u*159,u)\ntopstud=Part.makeCylinder(4.7625,37,b-u*13,u)\nmoving=joined([rod,topstud])\nshape=Part.makeCompound([fixed,moving])\nif fixed.common(moving).Volume>1e-6:raise ValueError('Solape cuerpo-vastago')\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nshape=compound([rod(tuple(a+u*24),tuple(a+u*164),22),rod(tuple(a+u*145),tuple(b-u*24),7),rod(tuple(a-u*24),tuple(a+u*24),4.7625),rod(tuple(b-u*24),tuple(b+u*24),4.7625)])\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22338,59 +22386,61 @@
           0.25,
           0.12
         ],
-        "material": "Amortiguador comercial paraRV,referencia555001 con montajesS4; cuerpo y bujes visuales.",
+        "material": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
         "part_number": "SU-DAMPER-1-1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+        "summary": "Amortiguador de referencia dimensional283271 · reubicado S01",
         "notes": [
           {
             "title": "function",
-            "body": "Amortiguador de referencia Lippert 283271 · montaje inclinado",
+            "body": "Disipar energía del movimiento de la suspensión. Cuerpo hueco y vástago telescópico representados sin solape material entre ambos.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "material",
-            "body": "Amortiguador comercial; cuerpo y vástago representativos, no geometría OEM para fabricar.",
+            "body": "Amortiguador comercial; envolvente de desarrollo. Referencia dimensional Lippert283271. No fabricar el componente con este CAD.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "design_basis",
-            "body": "Sustituye referencia Monroe de R1. Catálogo Lippert: 7.5–12 in =190.5–304.8 mm entre referencias de montaje. Distancias nominales dx160 dz200: L256.125 mm, ángulo38.66° respecto vertical. Con +70/-50 mm de desplazamiento vertical aislado:206.155/296.816 mm. Márgenes15.655/7.984 mm. La articulación real modifica estos valores.",
+            "body": "Punto inferior60 mm por delante del eje delantero / por detrás del trasero y49 mm por debajo del eje, y±845. Superior separado160 mm longitudinales y200 mm verticales. L nominal256.125 mm;190.5–304.8 mm de referencia. Desplazamientos verticales aislados+70/-50 mm dan206.155/296.816 mm. Confirmar con proveedor referencia de medición y curva fuerza/velocidad.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "manufacturing",
-            "body": "Corte y mecanizado en plantilla. Desbarbar y proteger superficies; no es plano liberado.",
+            "body": "Componente de compra. CuerpoØ44, vástagoØ14 y espárragosØ9.525 son envolventes de integración, no cotas OEM de fabricación. Rosca no modelada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "assembly",
-            "body": "Montaje sobre casquillos de goma y arandelas, normales al eje. Rosca3/8 de representación: confirmar ficha exacta del283271 y métrica de longitudes OEM. No utilizar como tope de extensión o compresión.",
+            "body": "Un solo conjunto de tuerca exterior por espárrago. Arandelas interiores retenidas por hombros, cuatro gomas en total con labios en los agujeros, cuatro arandelas y dos tuercas. No usar amortiguador como tope de recorrido.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Confirmación de fuerza-velocidad, longitudes OEM y articulación de ballesta/balancín obligatoria. Márgenes nominales no garantizan carrera en cruce de ejes; incorporar limitación de extensión independiente si resulta necesaria.",
+            "body": "Auditoría nominal y cinco posiciones verticales: no choque con eje ni soportes. La variación de inclinación exige aproximadamente-6.04°/+12.25° respecto del montaje nominal. La goma debe admitirla según OEM; el dibujo rígido no prueba flexibilidad, fuerza de amortiguación, articulación real ni resistencia.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22400,15 +22450,18 @@
     {
       "id": "SU-DAMPERLOW-1-1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada inferior con asiento perpendicular",
+      "description": "Ménsula inferior continua fuera del eje y ballesta · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,a-u*3,u)\ntop=z+74.0385\nweb=prism([(x-63,-930,top),(x-63,-912.5,top),(x-63,-840,a.z-25),(x-63,-875,a.z-35),(x-63,-930,top-30)],(8,0,0))\nclear=Part.makeCylinder(20,100,a-u*50,u)\nweb=web.cut(clear)\nshape=joined([seat,web])\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=a\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [3036.1,3076.1]:\n w=polyprism([(xx,912.5,params['z']+64.0385),(xx,932.5,params['z']+64.0385),(xx,863,params['z']-27),(xx,827,params['z']-27)],(6,0,0))\n w=w.cut(cyl(33.2,240,(3059.1,842.5,params['z']),(0,1,0)))\n webs.append(w)\nbase=box(58,20,6,(3030.1,912.5,params['z']+58.0385))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22416,13 +22469,15 @@
           0.4,
           0.42
         ],
-        "material": "S235 e6; pieza solidaria a placa de apriete rediseñada.",
+        "material": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
         "part_number": "SU-DAMPERLOW-1-1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada inferior con asiento perpendicular",
+        "summary": "Ménsula inferior continua fuera del eje y ballesta · S01",
         "notes": [
           {
             "title": "function",
@@ -22432,7 +22487,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Alma de chapaS235 e8 y asiento anularØ56/e6, agujeroØ12. Desarrollo propio; no accesorio OEM aprobado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22450,25 +22505,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos nervios e6 con recorte de holgura de3 mm alrededor del tubo de eje; apoyo58 ×20 ×6 sólo en banda interior de placa de apriete, evitando el paquete de hojas. Cara superior del apoyo z-150.833 y base z-156.833. Placa normal al ejeØ56/e6 conØ12. Construir conjunto antes de montar U-bolts. No soldar al tubo de eje. Verificar que el recorte no comprometa resistencia y acceso.",
+            "body": "Alma contra la cara delantera de la placa de apriete en eje delantero, o trasera en eje trasero; pie en banda interior, fuera del paquete. RecorteØ40 libera gomas y arandelas. Conjunto soldado a placa de apriete antes de montar abrazaderas, sin soldar al tubo de eje. Unión y secuencia por WPS calculada.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo continuo; contacto geométrico con placa de apriete y ausencia de choque con eje/hojas comprobados en posición nominal. Holgura a hoja maestra10.275 mm en delantero izquierdo. Determinar juego lateral, tolerancias y flexión real: no asumir que la holgura nominal basta. Dimensionar torsión de placa, alma, asiento y cordones antes de fabricar.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22478,15 +22533,18 @@
     {
       "id": "SU-DAMPERUP-1-1",
       "parent_id": "SUSP",
-      "description": "Ménsula nervada superior con asiento perpendicular",
+      "description": "Ménsula superior continua con despeje de gomas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\nseat=tube(28,6,6,b-u*3,u)\nbase=box(100,175,6,(b.x-50,-1000,-12))\nclear=Part.makeCylinder(20,100,b-u*50,u)\nwebs=[]\nfor xx in [b.x-22,b.x+16]:\n w=prism([(xx,-962.5,-12),(xx,-825,-12),(xx,-845,b.z-32)],(6,0,0))\n webs.append(w.cut(clear))\nshape=joined([base,seat]+webs)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nc=b\nplate=Part.makeCylinder(28,6,c-u*3,u).cut(Part.makeCylinder(6,8,c-u*4,u))\nwebs=[]\nfor xx in [3197.1,3235.1]:\n webs.append(polyprism([(xx,962.5,-12),(xx,825,-12),(xx,845,params['z']+params['dz']-35)],(6,0,0)))\nbase=box(100,175,6,(3169.1,825,-12))\nshape=compound([plate,base]+webs)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22494,13 +22552,15 @@
           0.4,
           0.42
         ],
-        "material": "ChapaS235e6, unión atornillada/soldada aplaca dedicada.",
+        "material": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
         "part_number": "SU-DAMPERUP-1-1",
-        "geometry_status": "desarrollo_R2_no_liberado",
-        "revision_detail": "R2"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Ménsula nervada superior con asiento perpendicular",
+        "summary": "Ménsula superior continua con despeje de gomas · S01",
         "notes": [
           {
             "title": "function",
@@ -22510,7 +22570,7 @@
           },
           {
             "title": "material",
-            "body": "Acero S235 certificado; espesor según receta CAD.",
+            "body": "Chapa S235: base100 ×175 ×6, dos nervios e6 y asientoØ56/e6 con agujeroØ12. Espesores de desarrollo sujetos a cálculo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22528,25 +22588,25 @@
           },
           {
             "title": "assembly",
-            "body": "Placa anular Ø56/e6, agujeroØ12 orientado normal al amortiguador; dos nervios e6 y base100 × 175 × 6 a cara inferior del larguero. Solape de75 mm de base bajo RHS, sin cargar piso. Acceso a tuerca y longitud libre del vástago por confirmar.",
+            "body": "Basez-12 a-6 soldada bajo la placa de reparto de suspensión existente, que conecta con el larguero. Nervios y asiento siguen parámetros del amortiguador. Recorte cilíndricoØ40 alrededor del eje de montaje deja libres las gomas/arandelas. Acceso representativo con llave corta; no se verificó vaso largo.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Dimensionar nervios, cordones y presión de gomas con carga real del amortiguador. Compatibilidad de apriete de U y acceso a herramientas; CAD de desarrollo.",
+            "body": "Un cuerpo BREP continuo y contacto geométrico con placa de reparto comprobados. Cierre de carga, espesor de base/nervios, fatiga y cordones requieren fuerza de amortiguador y análisis. No soldar la pieza de compra; el soporte se fabrica aparte.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22775,15 +22835,18 @@
     {
       "id": "SU-DAMPERKIT-0--1",
       "parent_id": "SUSP",
-      "description": "Bujes y arandelas de los dos montajes de amortiguador",
+      "description": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\ndef nut(p):\n v=V(0,1,0);w=u.cross(v)\n pts=[p+v*(8.25*math.cos(i*math.pi/3))+w*(8.25*math.sin(i*math.pi/3)) for i in range(6)]\n return Part.Face(Part.makePolygon(pts+[pts[0]])).extrude(u*8).cut(Part.makeCylinder(4.8,10,p-u,u))\nrubbers=[];washers=[];nuts=[]\nfor c,out in [(a,-1),(b,1)]:\n for k in [-1,1]:\n  g=tube(14,4.9,8,c+u*(3 if k>0 else -11),u)\n  lip=tube(5.95,4.9,3,c+u*(0 if k>0 else -3),u)\n  rubbers.append(g.fuse(lip).removeSplitter())\n  washers.append(tube(16,5,2,c+u*(11 if k>0 else -13),u))\n nuts.append(nut(c+u*(13 if out>0 else -21)))\nshape=Part.makeCompound(rubbers+washers+nuts)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,-845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nparts=[]\nfor c in [a,b]:\n for k in [-1,1]:\n  p=c+u*(k*4 if k>0 else -12)\n  parts.append(Part.makeCylinder(14,8,p,u).cut(Part.makeCylinder(5,8,p,u)))\n  p=c+u*(12 if k>0 else -14)\n  parts.append(Part.makeCylinder(16,2,p,u).cut(Part.makeCylinder(5,2,p,u)))\n  p=c+u*(14 if k>0 else -20)\n  parts.append(Part.makeCylinder(8,6,p,u).cut(Part.makeCylinder(4.8,6,p,u)))\nshape=compound(parts)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22791,12 +22854,15 @@
           0.47,
           0.49
         ],
-        "material": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+        "material": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
         "part_number": "SU-DAMPERKIT-0--1",
-        "geometry_status": "desarrollo_R2_no_liberado"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Bujes y arandelas de los dos montajes de amortiguador",
+        "summary": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
         "notes": [
           {
             "title": "function",
@@ -22806,7 +22872,7 @@
           },
           {
             "title": "material",
-            "body": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+            "body": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22824,25 +22890,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos gomas por montaje, una a cada cara de placa e6 y arandelas externas. Tuerca exterior según vástago OEM; no apretar como unión rígida ni inmovilizar la goma. Tuercas representadas cilíndricas para simplificación.",
+            "body": "Dos gomas por extremo, apoyadas sobre caras±3 de placae6; labios centran en agujeroØ12. Arandelas exteriores de goma a±11–13. Una tuerca por extremo: inferior hacia abajo y superior hacia arriba; arandelas interiores retenidas por hombros del amortiguador. No duplicar tuercas donde sale el cuerpo/vástago.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Compresión de goma y guía de espárrago según fabricante. El conjunto se representa como un ítem compuesto; no confundir número de ítems con número de piezas de taller.",
+            "body": "En posición nominal: sin solapes con soportes, apoyos sin hueco axial, diez cuerpos de compra representados. La compresión y capacidad angular de la goma no se simularon. Confirmar geometría y ajuste OEM y retención de tuerca; no asignar torque genérico.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22852,15 +22918,18 @@
     {
       "id": "SU-DAMPERKIT-0-1",
       "parent_id": "SUSP",
-      "description": "Bujes y arandelas de los dos montajes de amortiguador",
+      "description": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\ndef nut(p):\n v=V(0,1,0);w=u.cross(v)\n pts=[p+v*(8.25*math.cos(i*math.pi/3))+w*(8.25*math.sin(i*math.pi/3)) for i in range(6)]\n return Part.Face(Part.makePolygon(pts+[pts[0]])).extrude(u*8).cut(Part.makeCylinder(4.8,10,p-u,u))\nrubbers=[];washers=[];nuts=[]\nfor c,out in [(a,-1),(b,1)]:\n for k in [-1,1]:\n  g=tube(14,4.9,8,c+u*(3 if k>0 else -11),u)\n  lip=tube(5.95,4.9,3,c+u*(0 if k>0 else -3),u)\n  rubbers.append(g.fuse(lip).removeSplitter())\n  washers.append(tube(16,5,2,c+u*(11 if k>0 else -13),u))\n nuts.append(nut(c+u*(13 if out>0 else -21)))\nshape=Part.makeCompound(rubbers+washers+nuts)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=1;m.A14=0*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XF",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(2220.9,845,params[\"z\"]-15);b=V((2220.9+(-1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nparts=[]\nfor c in [a,b]:\n for k in [-1,1]:\n  p=c+u*(k*4 if k>0 else -12)\n  parts.append(Part.makeCylinder(14,8,p,u).cut(Part.makeCylinder(5,8,p,u)))\n  p=c+u*(12 if k>0 else -14)\n  parts.append(Part.makeCylinder(16,2,p,u).cut(Part.makeCylinder(5,2,p,u)))\n  p=c+u*(14 if k>0 else -20)\n  parts.append(Part.makeCylinder(8,6,p,u).cut(Part.makeCylinder(4.8,6,p,u)))\nshape=compound(parts)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22868,12 +22937,15 @@
           0.47,
           0.49
         ],
-        "material": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+        "material": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
         "part_number": "SU-DAMPERKIT-0-1",
-        "geometry_status": "desarrollo_R2_no_liberado"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Bujes y arandelas de los dos montajes de amortiguador",
+        "summary": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
         "notes": [
           {
             "title": "function",
@@ -22883,7 +22955,7 @@
           },
           {
             "title": "material",
-            "body": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+            "body": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22901,25 +22973,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos gomas por montaje, una a cada cara de placa e6 y arandelas externas. Tuerca exterior según vástago OEM; no apretar como unión rígida ni inmovilizar la goma. Tuercas representadas cilíndricas para simplificación.",
+            "body": "Dos gomas por extremo, apoyadas sobre caras±3 de placae6; labios centran en agujeroØ12. Arandelas exteriores de goma a±11–13. Una tuerca por extremo: inferior hacia abajo y superior hacia arriba; arandelas interiores retenidas por hombros del amortiguador. No duplicar tuercas donde sale el cuerpo/vástago.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Compresión de goma y guía de espárrago según fabricante. El conjunto se representa como un ítem compuesto; no confundir número de ítems con número de piezas de taller.",
+            "body": "En posición nominal: sin solapes con soportes, apoyos sin hueco axial, diez cuerpos de compra representados. La compresión y capacidad angular de la goma no se simularon. Confirmar geometría y ajuste OEM y retención de tuerca; no asignar torque genérico.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -22929,15 +23001,18 @@
     {
       "id": "SU-DAMPERKIT-1--1",
       "parent_id": "SUSP",
-      "description": "Bujes y arandelas de los dos montajes de amortiguador",
+      "description": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\ndef nut(p):\n v=V(0,1,0);w=u.cross(v)\n pts=[p+v*(8.25*math.cos(i*math.pi/3))+w*(8.25*math.sin(i*math.pi/3)) for i in range(6)]\n return Part.Face(Part.makePolygon(pts+[pts[0]])).extrude(u*8).cut(Part.makeCylinder(4.8,10,p-u,u))\nrubbers=[];washers=[];nuts=[]\nfor c,out in [(a,-1),(b,1)]:\n for k in [-1,1]:\n  g=tube(14,4.9,8,c+u*(3 if k>0 else -11),u)\n  lip=tube(5.95,4.9,3,c+u*(0 if k>0 else -3),u)\n  rubbers.append(g.fuse(lip).removeSplitter())\n  washers.append(tube(16,5,2,c+u*(11 if k>0 else -13),u))\n nuts.append(nut(c+u*(13 if out>0 else -21)))\nshape=Part.makeCompound(rubbers+washers+nuts)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,-845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),-845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nparts=[]\nfor c in [a,b]:\n for k in [-1,1]:\n  p=c+u*(k*4 if k>0 else -12)\n  parts.append(Part.makeCylinder(14,8,p,u).cut(Part.makeCylinder(5,8,p,u)))\n  p=c+u*(12 if k>0 else -14)\n  parts.append(Part.makeCylinder(16,2,p,u).cut(Part.makeCylinder(5,2,p,u)))\n  p=c+u*(14 if k>0 else -20)\n  parts.append(Part.makeCylinder(8,6,p,u).cut(Part.makeCylinder(4.8,6,p,u)))\nshape=compound(parts)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -22945,12 +23020,15 @@
           0.47,
           0.49
         ],
-        "material": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+        "material": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
         "part_number": "SU-DAMPERKIT-1--1",
-        "geometry_status": "desarrollo_R2_no_liberado"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Bujes y arandelas de los dos montajes de amortiguador",
+        "summary": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
         "notes": [
           {
             "title": "function",
@@ -22960,7 +23038,7 @@
           },
           {
             "title": "material",
-            "body": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+            "body": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -22978,25 +23056,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos gomas por montaje, una a cada cara de placa e6 y arandelas externas. Tuerca exterior según vástago OEM; no apretar como unión rígida ni inmovilizar la goma. Tuercas representadas cilíndricas para simplificación.",
+            "body": "Dos gomas por extremo, apoyadas sobre caras±3 de placae6; labios centran en agujeroØ12. Arandelas exteriores de goma a±11–13. Una tuerca por extremo: inferior hacia abajo y superior hacia arriba; arandelas interiores retenidas por hombros del amortiguador. No duplicar tuercas donde sale el cuerpo/vástago.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Compresión de goma y guía de espárrago según fabricante. El conjunto se representa como un ítem compuesto; no confundir número de ítems con número de piezas de taller.",
+            "body": "En posición nominal: sin solapes con soportes, apoyos sin hueco axial, diez cuerpos de compra representados. La compresión y capacidad angular de la goma no se simularon. Confirmar geometría y ajuste OEM y retención de tuerca; no asignar torque genérico.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -23006,15 +23084,18 @@
     {
       "id": "SU-DAMPERKIT-1-1",
       "parent_id": "SUSP",
-      "description": "Bujes y arandelas de los dos montajes de amortiguador",
+      "description": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
       "recipe": {
         "representation": "freecad_python",
+        "script": "import math\nV=App.Vector\ndef box(l,w,h,p):return Part.makeBox(l,w,h,V(*p))\ndef prism(points,vec):\n v=[V(*p) for p in points];return Part.Face(Part.makePolygon(v+[v[0]])).extrude(V(*vec))\ndef tube(ro,ri,h,p,u):return Part.makeCylinder(ro,h,p,u).cut(Part.makeCylinder(ri,h,p,u))\ndef joined(parts):\n result=parts[0].multiFuse(parts[1:]).removeSplitter()\n if not result.isValid() or len(result.Solids)!=1:raise ValueError('Soldadura sin continuidad geometrica')\n return result\nx=params['x'];z=params['z'];dx=params['dx'];dz=params['dz'];off=params['xo'];zo=params['zo']\na=V(x-off,-845,z-zo);b=a+V(-dx,0,dz);u=b-a;u=u/u.Length\n\ndef nut(p):\n v=V(0,1,0);w=u.cross(v)\n pts=[p+v*(8.25*math.cos(i*math.pi/3))+w*(8.25*math.sin(i*math.pi/3)) for i in range(6)]\n return Part.Face(Part.makePolygon(pts+[pts[0]])).extrude(u*8).cut(Part.makeCylinder(4.8,10,p-u,u))\nrubbers=[];washers=[];nuts=[]\nfor c,out in [(a,-1),(b,1)]:\n for k in [-1,1]:\n  g=tube(14,4.9,8,c+u*(3 if k>0 else -11),u)\n  lip=tube(5.95,4.9,3,c+u*(0 if k>0 else -3),u)\n  rubbers.append(g.fuse(lip).removeSplitter())\n  washers.append(tube(16,5,2,c+u*(11 if k>0 else -13),u))\n nuts.append(nut(c+u*(13 if out>0 else -21)))\nshape=Part.makeCompound(rubbers+washers+nuts)\n\nif shape.isNull() or not shape.isValid():raise ValueError(\"S01: CAD invalido\")\n# Simetria horneada en BREP; no se usa Placement de la ocurrencia.\nm=App.Matrix()\nm.A11=-1;m.A14=2*x\nm.A22=-1\nshape=shape.transformGeometry(m)\nif shape.Volume<0:shape.reverse()\nif not shape.isValid():raise ValueError('S01 simetria invalida')\n",
         "bindings": {
+          "x": "XR",
           "z": "AXLE_Z",
           "dx": "DAMP_DX",
-          "dz": "DAMP_DZ"
-        },
-        "script": "import math\nV=App.Vector\ndef cyl(r,h,p,axis=(0,0,1)):\n    return Part.makeCylinder(r,h,V(*p),V(*axis))\ndef box(l,w,h,p):\n    return Part.makeBox(l,w,h,V(*p))\ndef compound(parts):\n    return Part.makeCompound(parts)\ndef ring(ro,ri,length,p,axis=(0,1,0)):\n    return cyl(ro,length,p,axis).cut(cyl(ri,length,p,axis))\ndef rod(a,b,r):\n    a=V(*a); b=V(*b); d=b-a\n    return Part.makeCylinder(r,d.Length,a,d)\ndef polyprism(points,vector):\n    vs=[V(*p) for p in points];vs.append(vs[0])\n    return Part.Face(Part.makePolygon(vs)).extrude(V(*vector))\ndef rhs(a,b,width,height,t):\n    ax,ay,az=a;bx,by,bz=b;dx=bx-ax;dy=by-ay;le=math.hypot(dx,dy);nx=-dy/le;ny=dx/le;ux=dx/le;uy=dy/le\n    def prism(xa,ya,xb,yb,w,z,h):\n        return polyprism([(xa+nx*w/2,ya+ny*w/2,z),(xb+nx*w/2,yb+ny*w/2,z),(xb-nx*w/2,yb-ny*w/2,z),(xa-nx*w/2,ya-ny*w/2,z)],(0,0,h))\n    return prism(ax,ay,bx,by,width,az,height).cut(prism(ax-ux,ay-uy,bx+ux,by+uy,width-2*t,az+t,height-2*t))\ndef hexsolid(r,h,p,axis=\"z\"):\n    x,y,z=p\n    pts=[(x+r*math.cos(k*math.pi/3),y+r*math.sin(k*math.pi/3),z) for k in range(6)] if axis==\"z\" else [(x+r*math.cos(k*math.pi/3),y,z+r*math.sin(k*math.pi/3)) for k in range(6)]\n    return polyprism(pts,(0,0,h) if axis==\"z\" else (0,h,0))\na=V(3059.1,845,params[\"z\"]-15);b=V((3059.1+(1)*params['dx']),845,params[\"z\"]+params[\"dz\"]-15);u=(b-a);u=u/u.Length\nparts=[]\nfor c in [a,b]:\n for k in [-1,1]:\n  p=c+u*(k*4 if k>0 else -12)\n  parts.append(Part.makeCylinder(14,8,p,u).cut(Part.makeCylinder(5,8,p,u)))\n  p=c+u*(12 if k>0 else -14)\n  parts.append(Part.makeCylinder(16,2,p,u).cut(Part.makeCylinder(5,2,p,u)))\n  p=c+u*(14 if k>0 else -20)\n  parts.append(Part.makeCylinder(8,6,p,u).cut(Part.makeCylinder(4.8,6,p,u)))\nshape=compound(parts)\nif shape.isNull() or not shape.isValid(): raise ValueError(\"R2: geometria invalida\")\n"
+          "dz": "DAMP_DZ",
+          "xo": "S01_DAMP_XOFF",
+          "zo": "S01_DAMP_ZOFF"
+        }
       },
       "properties": {
         "color": [
@@ -23022,12 +23103,15 @@
           0.47,
           0.49
         ],
-        "material": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+        "material": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
         "part_number": "SU-DAMPERKIT-1-1",
-        "geometry_status": "desarrollo_R2_no_liberado"
+        "geometry_status": "auditoria_geometrica_S01",
+        "revision_detail": "S01",
+        "audit_scope": "Amortiguación: geometría nominal; pendiente cinemática real y resistencia",
+        "oem_reference": "Lippert283271, referencia dimensional; diseño de soporte propio"
       },
       "engineering": {
-        "summary": "Bujes y arandelas de los dos montajes de amortiguador",
+        "summary": "Cuatro gomas, cuatro arandelas y dos tuercas · S01",
         "notes": [
           {
             "title": "function",
@@ -23037,7 +23121,7 @@
           },
           {
             "title": "material",
-            "body": "Gomas elastoméricas y arandelas cazoleta de compra. Dimensiones visuales de interfaz a confirmar OEM.",
+            "body": "Gomas y arandelas del amortiguador comercial; dimensiones de interfaz ilustrativas. Tuercas3/8-24 de referencia a confirmar con proveedor; roscas no modeladas.",
             "author": "Codex",
             "date": "2026-10-24"
           },
@@ -23055,25 +23139,25 @@
           },
           {
             "title": "assembly",
-            "body": "Dos gomas por montaje, una a cada cara de placa e6 y arandelas externas. Tuerca exterior según vástago OEM; no apretar como unión rígida ni inmovilizar la goma. Tuercas representadas cilíndricas para simplificación.",
+            "body": "Dos gomas por extremo, apoyadas sobre caras±3 de placae6; labios centran en agujeroØ12. Arandelas exteriores de goma a±11–13. Una tuerca por extremo: inferior hacia abajo y superior hacia arriba; arandelas interiores retenidas por hombros del amortiguador. No duplicar tuercas donde sale el cuerpo/vástago.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "verification",
-            "body": "Compresión de goma y guía de espárrago según fabricante. El conjunto se representa como un ítem compuesto; no confundir número de ítems con número de piezas de taller.",
+            "body": "En posición nominal: sin solapes con soportes, apoyos sin hueco axial, diez cuerpos de compra representados. La compresión y capacidad angular de la goma no se simularon. Confirmar geometría y ajuste OEM y retención de tuerca; no asignar torque genérico.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "maintenance",
-            "body": "Revisar apriete, grietas, corrosión y desgaste según manual de la unidad final.",
+            "body": "Revisar estado de gomas, pérdidas, aprietes y grietas; criterio e intervalos finales por proveedor del sistema validado.",
             "author": "Codex",
             "date": "2026-10-24"
           },
           {
             "title": "provenance",
-            "body": "Decisiones R2 y fuentes enlazadas en el grafo Nav IA. Dimensiones propias salvo identificación OEM.",
+            "body": "Auditoría S01 con BREP/OCCT mediante MCP Nav IA y FreeCAD. La referencia comercial no es un plano OEM ni demuestra aptitud de este montaje.",
             "author": "Codex",
             "date": "2026-10-24"
           }
@@ -25349,6 +25433,18 @@
     {
       "id": "DAMP_MAX",
       "value": 304.8,
+      "unit": "mm",
+      "formula": null
+    },
+    {
+      "id": "S01_DAMP_XOFF",
+      "value": 60,
+      "unit": "mm",
+      "formula": null
+    },
+    {
+      "id": "S01_DAMP_ZOFF",
+      "value": 49,
       "unit": "mm",
       "formula": null
     }
@@ -30628,8 +30724,8 @@
     },
     {
       "id": "R2-D02",
-      "title": "Amortiguadores con carrera e interfaces explícitas",
-      "body": "Se cambia referencia de Monroe555001 a Lippert283271, recolocando punto superior:dx160/dz200 mm. Se modelan ménsulas nervadas, placas perpendiculares, gomas y arandelas. Se descarta kit exterior por falta de espacio lateral.",
+      "title": "Antecedente R2 · amortiguadores (sustituido por S01)",
+      "body": "Antecedente conservado para trazabilidad. Su geometría se reemplazó en S01 al detectar interferencias reales y un soporte inferior desconectado. Consultar S01-D01 y S01-EVIDENCIA para el estado revisado. Los criterios de carrera aislada siguen sujetos a cinemática real y confirmaciónOEM.",
       "item_ids": [
         "SU-DAMPER-0--1",
         "SU-DAMPERUP-0--1",
@@ -30649,7 +30745,7 @@
         "SU-DAMPERKIT-1-1"
       ],
       "kind": "design_decision",
-      "validation": "Cerrar referencia OEM, curva fuerza/velocidad, compresión de gomas, envolvente cinemática con balancín y cargas de soporte. No usar el amortiguador como limitador. Márgenes algebraicos no son validación dinámica."
+      "validation": "Sustituido por S01. No usar geometría ni disposición de herrajes R2 para fabricar."
     },
     {
       "id": "R2-D02-VALIDAR",
@@ -31075,6 +31171,89 @@
         "ROOT"
       ],
       "kind": "revision_log"
+    },
+    {
+      "id": "S01-D01",
+      "title": "S01 · Amortiguación revisada por montaje",
+      "body": "Se corrigieron16 elementos después de medir errores reales en R2:choque amortiguador/eje, herrajes/ménsulas y ménsula inferior/eje; la ménsula inferior tenía3 cuerpos desconectados. Nuevo anclaje inferior60mm fuera longitudinalmente del eje y49mm por debajo. Se verificaron individualmente los cuatro montajes:43,41,36 y34 vecinos, sin solapes nominales detectados. Cada ménsula y su contacto con la pieza receptora forman una unión geométrica continua. Holguras nominales mínimas:amortiguador/eje29.964mm,ménsula/eje19.300mm,ménsula/hoja10.275mm. No equivale a resistencia de soldadura ni validación en servicio.",
+      "item_ids": [
+        "SU-DAMPER-0--1",
+        "SU-DAMPERUP-0--1",
+        "SU-DAMPERLOW-0--1",
+        "SU-DAMPERKIT-0--1",
+        "SU-DAMPER-0-1",
+        "SU-DAMPERUP-0-1",
+        "SU-DAMPERLOW-0-1",
+        "SU-DAMPERKIT-0-1",
+        "SU-DAMPER-1--1",
+        "SU-DAMPERUP-1--1",
+        "SU-DAMPERLOW-1--1",
+        "SU-DAMPERKIT-1--1",
+        "SU-DAMPER-1-1",
+        "SU-DAMPERUP-1-1",
+        "SU-DAMPERLOW-1-1",
+        "SU-DAMPERKIT-1-1"
+      ],
+      "kind": "design_decision",
+      "validation": "Pendientes:planoOEM, capacidad angular de gomas, fuerzas de amortiguación, cálculo de soportes/placa/soldaduras/fatiga y cinemática articulada real del tándem. Sólo se revisó nominalmente cada montaje y se probaron cinco traslaciones verticales aisladas en delantero izquierdo. El resto del trailer no se declara revisado."
+    },
+    {
+      "id": "S01-VALIDAR",
+      "title": "S01 · Límites funcionales y resistentes",
+      "body": "La traslación vertical aislada no reproduce giro de eje/balancín ni avance longitudinal de ballesta. En delantero izquierdo:+70/-50mm requieren cambio angular de goma de+12.25/-6.04°. Confirmar con OEM la admisibilidad, referencia de longitud190.5–304.8mm y curva fuerza-velocidad. Resolver topes/límites independientes, carga de soportes, precarga, fatiga y soldaduras. No fabricar a partir de una envolvente OEM aproximada.",
+      "item_ids": [
+        "SU-DAMPER-0--1",
+        "SU-DAMPERUP-0--1",
+        "SU-DAMPERLOW-0--1",
+        "SU-DAMPERKIT-0--1",
+        "SU-DAMPER-0-1",
+        "SU-DAMPERUP-0-1",
+        "SU-DAMPERLOW-0-1",
+        "SU-DAMPERKIT-0-1",
+        "SU-DAMPER-1--1",
+        "SU-DAMPERUP-1--1",
+        "SU-DAMPERLOW-1--1",
+        "SU-DAMPERKIT-1--1",
+        "SU-DAMPER-1-1",
+        "SU-DAMPERUP-1-1",
+        "SU-DAMPERLOW-1-1",
+        "SU-DAMPERKIT-1-1"
+      ],
+      "kind": "validation_requirement"
+    },
+    {
+      "id": "S01-EVIDENCIA",
+      "title": "S01 · Evidencia BREP de la auditoría",
+      "body": "Mediciones antes/después mediante FreeCAD/OCCT, continuidad booleana y volúmenes comunes. Umbral de reporte0.001mm³. Cuatro esquinas nominales con16 ítems; cinco traslaciones verticales sólo en delantero izquierdo. En ese control no hubo choque del amortiguador con eje; holgura mínima26.817mm. Se comprobaron espárragos contra soportes en extremos y nominal. Envolvente de llave cortaR20/17mm sin choques; no valida herramienta comercial ni deformación de goma. InformeJSON yMD publicados con detalles y límites.",
+      "item_ids": [
+        "SU-DAMPER-0--1",
+        "SU-DAMPERUP-0--1",
+        "SU-DAMPERLOW-0--1",
+        "SU-DAMPERKIT-0--1",
+        "SU-DAMPER-0-1",
+        "SU-DAMPERUP-0-1",
+        "SU-DAMPERLOW-0-1",
+        "SU-DAMPERKIT-0-1",
+        "SU-DAMPER-1--1",
+        "SU-DAMPERUP-1--1",
+        "SU-DAMPERLOW-1--1",
+        "SU-DAMPERKIT-1--1",
+        "SU-DAMPER-1-1",
+        "SU-DAMPERUP-1-1",
+        "SU-DAMPERLOW-1-1",
+        "SU-DAMPERKIT-1-1"
+      ],
+      "kind": "computed_evidence",
+      "source_url": "https://felipe-klz.github.io/cr200-explorador/downloads/auditoria-s01.json"
+    },
+    {
+      "id": "AUDIT-PLAN",
+      "title": "Revisión secuencial del trailer: estado por subensamble",
+      "body": "S01 amortiguación:corregida y revisada nominalmente; validación funcional/resistente abierta. Pendientes de auditoría:S02 suspensión tándem y trayectoria real;S03 nudos a bastidor;S04 lanza;S05 enganche/cadenas/ruptura/jockey;S06 bastidor y anclajes vivienda;S07 ejes/mazas/ruedas;S08 frenos;S09 instalación eléctrica;S10 accesorios exteriores. No extender resultados de S01 a todo el vehículo.",
+      "item_ids": [
+        "ROOT"
+      ],
+      "kind": "audit_plan"
     }
   ],
   "choices": [],
@@ -33148,6 +33327,240 @@
       "source": "note:R2-D02",
       "target": "var:DAMP_DZ",
       "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-1",
+      "source": "note:R2-SRC-LIPPERT",
+      "target": "note:S01-D01",
+      "kind": "supports"
+    },
+    {
+      "id": "S01-REL-2",
+      "source": "note:R2-SRC-CURT",
+      "target": "note:S01-D01",
+      "kind": "supports"
+    },
+    {
+      "id": "S01-REL-3",
+      "source": "note:S01-EVIDENCIA",
+      "target": "note:S01-D01",
+      "kind": "supports"
+    },
+    {
+      "id": "S01-REL-4",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPER-0--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-5",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPER-0--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-6",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERUP-0--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-7",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERUP-0--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-8",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERLOW-0--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-9",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERLOW-0--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-10",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERKIT-0--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-11",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERKIT-0--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-12",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPER-0-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-13",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPER-0-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-14",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERUP-0-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-15",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERUP-0-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-16",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERLOW-0-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-17",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERLOW-0-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-18",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERKIT-0-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-19",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERKIT-0-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-20",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPER-1--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-21",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPER-1--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-22",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERUP-1--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-23",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERUP-1--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-24",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERLOW-1--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-25",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERLOW-1--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-26",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERKIT-1--1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-27",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERKIT-1--1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-28",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPER-1-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-29",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPER-1-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-30",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERUP-1-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-31",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERUP-1-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-32",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERLOW-1-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-33",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERLOW-1-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-34",
+      "source": "note:S01-D01",
+      "target": "part:SU-DAMPERKIT-1-1",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-35",
+      "source": "note:S01-VALIDAR",
+      "target": "part:SU-DAMPERKIT-1-1",
+      "kind": "requires_verification"
+    },
+    {
+      "id": "S01-REL-36",
+      "source": "note:S01-D01",
+      "target": "var:S01_DAMP_XOFF",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-37",
+      "source": "note:S01-D01",
+      "target": "var:S01_DAMP_ZOFF",
+      "kind": "justifies"
+    },
+    {
+      "id": "S01-REL-38",
+      "source": "note:S01-D01",
+      "target": "note:S01-VALIDAR",
+      "kind": "requires"
+    },
+    {
+      "id": "S01-REL-39",
+      "source": "note:S01-D01",
+      "target": "note:AUDIT-PLAN",
+      "kind": "part_of_audit"
     }
   ]
 }

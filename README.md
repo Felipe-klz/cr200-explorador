@@ -1,13 +1,15 @@
 # CR200 — Explorador 3D
 
-Web estática para explorar 336 elementos del chasis CR200 de 4400 × 2000 mm, generado con MCP Nav IA. Revisión R2:26 elementos revisados y34 incorporados.
+Web estática para explorar336 elementos del chasis CR200 de4400 ×2000 mm, generado con MCP Nav IA. Actualización S01:auditoría geométrica del subensamble de amortiguación,16 elementos corregidos y cuatro montajes comprobados individualmente.
+
+S01 corrige interferencias y falta de continuidad detectadas en R2. El resto del trailer no se considera auditado por esos resultados. La siguiente subsección es S02:suspensión tándem y trayectoria real. La resistencia, fatiga, gomas, componentesOEM y cinemática articulada siguen pendientes.
 
 - Selección de sólidos y fichas por pieza.
 - Ocultar conjuntos, aislar piezas y ver el interior.
 - Vistas general, superior, inferior y de suspensión.
 - Matriz normativa argentina y hoja de ruta para homologación O2.
-- Diez recorridos de ingeniería con fuentes, decisiones y validaciones pendientes.
-- Descargas del CAD y documentación R2. Las fichas distinguen desarrollo propio y referencias OEM.
+- Recorridos de ingeniería con fuentes, decisiones y validaciones pendientes; S01 conserva las mediciones antes/después.
+- Descargas del CAD actualizado, informe S01 y auditoríaJSON. Las fichas indican qué piezas tienen auditoría nominal y cuáles siguen pendientes.
 
 Estado: diseño de desarrollo, sin homologación ni habilitación vial acreditadas. La página diferencia referencias de normas, especificaciones y cumplimiento demostrado.
 
