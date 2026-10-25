@@ -31,3 +31,8 @@ El barrido contra vecinos encontró cruces con EL-HARNESS, EL-PARKCABLE y RU-BAC
 Continuar por ojos, bujes, pernos, gemelas y balancín de este mismo montaje; después revisar los otros paquetes individualmente. Resolver interfaces con frenos y cables antes de cerrar la suspensión.
 
 No se realizó cálculo resistente, rigidez de ballestas, precarga, fatiga, tolerancias OEM, cinemática articulada ni ensayo. El dibujo corresponde a una posición nominal cargada, no a la forma libre. No hay homologación ni aprobación para circular.
+
+
+## BOM y presupuesto
+
+Consulta24/10/2026,Argentina/ARS,logísticaAMBA supuesta.54 líneas de compra/servicios y335 ítemsCAD asignados una sola vez. Datos y fórmulas en assets/budget.json; ajustes locales en budget.js. El modelo geométricoS02-A no cambia. Precios publicados/referencias y estimaciones identificados. Importación y contingencia se suman una sola vez; sin tarifas oficiales ni vivienda.

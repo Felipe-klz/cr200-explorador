@@ -187,3 +187,17 @@ try{
  initRenderer();const buffer=await loadGeometry();createMeshes(buffer);
 }catch(error){fallback(error);}
 
+
+// Navegación desde la BOM:filtra IDs explícitos del mismo CAD, sin alterar geometría.
+document.addEventListener('cr200:budget-select',event=>{
+ if(!data||!ready)return;
+ const ids=event.detail.ids.filter(id=>meshes.has(id));if(!ids.length)return;
+ topicIds=new Set(ids);isolateId=null;hidden.clear();xray=false;selected=null;$('#search').value='';
+ Object.keys(groupLabels).forEach(g=>enabled.add(g));
+ $('#topic-status').hidden=false;$('#topic-status').innerHTML='<span>'+escapeHTML(event.detail.title)+' · '+ids.length+' elementos</span><button id="close-topic">Ver todo ×</button>';
+ $('#close-topic').onclick=()=>{topicIds=null;$('#topic-status').hidden=true;clearSelection();setView('general');};
+ clearSelection();renderList();applyVisibility();
+ const box=new THREE.Box3();ids.forEach(id=>box.expandByObject(meshes.get(id)));const c=box.getCenter(new THREE.Vector3()),distance=Math.max(1.3,box.getSize(new THREE.Vector3()).length()*1.6);camera.position.copy(c).add(new THREE.Vector3(1,.75,1).normalize().multiplyScalar(distance));controls.target.copy(c);controls.update();render();
+ if(event.detail.select)selectPart(ids[0],true);
+ document.querySelector('.workspace').scrollIntoView({behavior:'smooth',block:'start'});
+});
